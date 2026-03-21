@@ -1,0 +1,126 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: players
+    // Document ID: auto-generated or user UID
+    // Fields:
+    //   - name: string (required, 1-100 chars)
+    //   - email: string (optional, email format)
+    //   - photoURL: string (optional, URL)
+    //   - stats: map (optional)
+    //
+    // Collection: tournaments
+    // Document ID: auto-generated
+    // Fields:
+    //   - name: string (required, 1-100 chars)
+    //   - date: timestamp (required)
+    //   - status: string (required, ['draft', 'active', 'completed'])
+    //   - bracket: string (optional, JSON)
+    //   - participants: list (optional, list of player IDs)
+    //
+    // Collection: tournaments/{tournamentId}/matches
+    // Document ID: auto-generated
+    // Fields:
+    //   - tournamentId: string (required)
+    //   - player1Id: string (required)
+    //   - player2Id: string (required)
+    //   - score1: number (required)
+    //   - score2: number (required)
+    //   - status: string (required, ['pending', 'live', 'completed'])
+    //   - winnerId: string (optional)
+    //   - bracketPosition: string (optional)
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getPlayerData(userId) {
+      return get(/databases/$(database)/documents/players/$(userId)).data;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/players/$(request.auth.uid)) && getPlayerData(request.auth.uid).role == 'admin') ||
+        (request.auth.token.email == "kingoflakemoor@gmail.com" && request.auth.token.email_verified == true)
+      );
+    }
+
+    function hasPermission(permission) {
+      return isAdmin() && (
+        (request.auth.token.email == "kingoflakemoor@gmail.com") ||
+        (exists(/databases/$(database)/documents/players/$(request.auth.uid)) && permission in getPlayerData(request.auth.uid).permissions)
+      );
+    }
+
+    function isValidPlayer(data) {
+      return data.keys().hasAll(['name', 'role']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.role in ['admin', 'player'];
+    }
+
+    function isValidSeason(data) {
+      return data.keys().hasAll(['name', 'status']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.status in ['upcoming', 'active', 'completed'];
+    }
+
+    function isValidTournament(data) {
+      return data.keys().hasAll(['name', 'status', 'date']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.status in ['draft', 'active', 'completed'];
+    }
+
+    function isValidMatch(data) {
+      return data.keys().hasAll(['tournamentId', 'player1Id', 'player2Id', 'score1', 'score2', 'status']) &&
+             data.tournamentId is string &&
+             data.player1Id is string &&
+             data.player2Id is string &&
+             data.score1 is number &&
+             data.score2 is number &&
+             data.status in ['pending', 'live', 'completed'];
+    }
+
+    // Rules
+    match /players/{playerId} {
+      allow read: if true;
+      // Only admins can create/update roles and permissions
+      allow create, update: if isAuthenticated() && isValidPlayer(request.resource.data) && (
+        (isOwner(playerId) && request.resource.data.role == 'player' && (!('permissions' in request.resource.data) || request.resource.data.permissions.size() == 0)) ||
+        hasPermission('manage_users')
+      );
+      allow delete: if hasPermission('manage_users');
+    }
+
+    match /seasons/{seasonId} {
+      allow read: if true;
+      allow create, update, delete: if hasPermission('manage_seasons');
+    }
+
+    match /tournaments/{tournamentId} {
+      allow read: if true;
+      allow create, update: if hasPermission('manage_events') || (hasPermission('edit_scores') && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['bracket', 'status']));
+      allow delete: if hasPermission('manage_events');
+
+      match /matches/{matchId} {
+        allow read: if true;
+        allow create, update: if hasPermission('manage_events') || hasPermission('edit_scores');
+        allow delete: if hasPermission('manage_events');
+      }
+    }
+
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}
