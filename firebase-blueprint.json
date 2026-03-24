@@ -20,16 +20,32 @@
       "properties": {
         "name": { "type": "string" },
         "date": { "type": "string" },
+        "venueId": { "type": "string" },
         "status": { "type": "string", "enum": ["upcoming", "live", "completed"] },
         "type": { "type": "string" }
       },
       "required": ["name", "date", "status", "type"]
+    },
+    "Venue": {
+      "title": "Venue",
+      "description": "A partner venue",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "address": { "type": "string" },
+        "boards": { "type": "number" },
+        "contactName": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "isSyndicatePartner": { "type": "boolean" }
+      },
+      "required": ["name", "address", "boards"]
     }
   },
   "firestore": {
     "/players/{uid}": { "schema": "Player", "description": "Player profiles" },
     "/tournaments/{tournamentId}": { "schema": "Tournament", "description": "Tournament data" },
     "/tournaments/{tournamentId}/matches/{matchId}": { "schema": "Match", "description": "Match data" },
-    "/seasons/{seasonId}": { "schema": "Season", "description": "Season data" }
+    "/seasons/{seasonId}": { "schema": "Season", "description": "Season data" },
+    "/venues/{venueId}": { "schema": "Venue", "description": "Partner venues" }
   }
 }

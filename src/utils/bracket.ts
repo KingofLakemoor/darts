@@ -4,9 +4,11 @@ export function generateBracket(
   participants: string[], 
   tournamentId: string,
   gameType: GameType,
-  gameConfig: X01Config | CricketConfig
+  gameConfig: X01Config | CricketConfig,
+  seededParticipants: string[] = []
 ): Omit<Match, 'id'>[] {
-  const numPlayers = participants.length;
+  const playersToUse = seededParticipants.length > 0 ? seededParticipants : [...participants].sort(() => Math.random() - 0.5);
+  const numPlayers = playersToUse.length;
   const numRounds = Math.ceil(Math.log2(numPlayers));
   const bracketSize = Math.pow(2, numRounds);
   
@@ -39,10 +41,9 @@ export function generateBracket(
   }
 
   // Fill first round and handle byes
-  const shuffled = [...participants].sort(() => Math.random() - 0.5);
   for (let i = 0; i < bracketSize / 2; i++) {
-    const p1 = shuffled[i * 2] || '';
-    const p2 = shuffled[i * 2 + 1] || '';
+    const p1 = playersToUse[i * 2] || '';
+    const p2 = playersToUse[i * 2 + 1] || '';
     
     rounds[0][i].player1Id = p1;
     rounds[0][i].player2Id = p2;
@@ -50,6 +51,7 @@ export function generateBracket(
     if (p1 && !p2) {
       rounds[0][i].status = 'completed';
       rounds[0][i].winnerId = p1;
+      rounds[0][i].score1 = 1; // Mark as bye win
       // Move to next round
       if (rounds[1]) {
         const nextPos = Math.floor(i / 2);
@@ -59,6 +61,7 @@ export function generateBracket(
     } else if (!p1 && p2) {
       rounds[0][i].status = 'completed';
       rounds[0][i].winnerId = p2;
+      rounds[0][i].score2 = 1; // Mark as bye win
       // Move to next round
       if (rounds[1]) {
         const nextPos = Math.floor(i / 2);

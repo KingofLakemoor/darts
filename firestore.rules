@@ -50,6 +50,11 @@ service cloud.firestore {
       }
     }
 
+    match /venues/{venueId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
     match /seasons/{seasonId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();

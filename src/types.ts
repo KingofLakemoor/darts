@@ -1,10 +1,15 @@
 export interface Player {
   uid: string;
-  name: string;
+  name: string; // Display name: "First L."
+  firstName?: string;
+  lastName?: string;
   email?: string;
   photoURL?: string;
-  role: 'admin' | 'player';
+  role: 'admin' | 'coordinator' | 'player';
   stats?: PlayerStats;
+  isVested?: boolean;
+  hasBounty?: boolean;
+  isPlaceholder?: boolean; // True if created by admin before user login
 }
 
 export interface PlayerStats {
@@ -50,6 +55,7 @@ export interface Tournament {
   id: string;
   name: string;
   date: string;
+  venueId?: string;
   status: 'upcoming' | 'live' | 'completed';
   type: 'single-elimination' | 'double-elimination' | 'round-robin';
   gameType: GameType;
@@ -57,6 +63,17 @@ export interface Tournament {
   participants: string[]; // Player UIDs
   winnerId?: string;
   seasonId?: string;
+  isSyndicate?: boolean;
+}
+
+export interface Venue {
+  id: string;
+  name: string;
+  address: string;
+  boards: number;
+  contactName?: string;
+  contactEmail?: string;
+  isSyndicatePartner?: boolean;
 }
 
 export interface Match {

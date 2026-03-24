@@ -3,10 +3,13 @@ import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Player } from '../types';
 import { TrendingUp, Search, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
+import { useTheme } from '../lib/ThemeContext';
+import { clsx } from 'clsx';
 
 export function StatsView() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const { isSyndicate } = useTheme();
 
   useEffect(() => {
     const q = query(collection(db, 'players'), orderBy('name', 'asc'));
@@ -23,43 +26,66 @@ export function StatsView() {
     <div className="space-y-8 max-w-[1400px] mx-auto">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-5xl font-bold text-slate-900 tracking-tight mb-2">Statistics</h1>
-          <p className="text-slate-500 text-lg">Detailed performance metrics for all club members.</p>
+          <h1 className={clsx(
+            "text-5xl font-bold tracking-tight mb-2",
+            isSyndicate ? "text-nasty-cream font-rocker" : "text-slate-900"
+          )}>Statistics</h1>
+          <p className={clsx(
+            "text-lg",
+            isSyndicate ? "text-steel-gray" : "text-slate-500"
+          )}>Detailed performance metrics for all club members.</p>
         </div>
         <div className="relative w-full md:w-72">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <Search className={clsx("absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5", isSyndicate ? "text-syndicate-red" : "text-slate-400")} />
           <input
             type="text"
             placeholder="Search players..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm"
+            className={clsx(
+              "w-full pl-12 pr-4 py-3 outline-none transition-all shadow-sm rounded-2xl",
+              isSyndicate 
+                ? "bg-onyx border border-syndicate-red/30 text-nasty-cream focus:ring-2 focus:ring-syndicate-red" 
+                : "bg-white border border-slate-200 text-slate-900 focus:ring-2 focus:ring-indigo-500"
+            )}
           />
         </div>
       </header>
 
-      <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden">
+      <div className={clsx(
+        "rounded-[2.5rem] border shadow-xl overflow-hidden",
+        isSyndicate ? "bg-onyx border-syndicate-red/30 merrowed-border" : "bg-white border-slate-200"
+      )}>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="p-6 font-black text-slate-400 text-[10px] uppercase tracking-widest sticky left-0 bg-slate-50 z-10">Player</th>
-                <th className="p-6 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Won Legs %</th>
-                <th className="p-6 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Avg</th>
-                <th className="p-6 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">9-Avg</th>
-                <th className="p-6 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Dbl CO %</th>
-                <th className="p-6 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Sgl CO %</th>
-                <th className="p-6 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Top Leg</th>
-                <th className="p-6 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Top Finish</th>
-                <th className="p-6 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Top Score</th>
-                <th className="p-6 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Top Avg</th>
-                <th className="p-6 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">180s</th>
-                <th className="p-6 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">170+</th>
-                <th className="p-6 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">130+</th>
-                <th className="p-6 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">90+</th>
+              <tr className={clsx(
+                "border-b",
+                isSyndicate ? "bg-onyx border-syndicate-red/30" : "bg-slate-50 border-slate-200"
+              )}>
+                <th className={clsx(
+                  "p-6 font-black text-[10px] uppercase tracking-widest sticky left-0 z-10",
+                  isSyndicate ? "bg-onyx text-steel-gray" : "bg-slate-50 text-slate-400"
+                )}>Player</th>
+                <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : "text-slate-400")}>Won Legs %</th>
+                <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : "text-slate-400")}>Avg</th>
+                <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : "text-slate-400")}>9-Avg</th>
+                <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : "text-slate-400")}>Dbl CO %</th>
+                <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : "text-slate-400")}>Sgl CO %</th>
+                <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : "text-slate-400")}>Top Leg</th>
+                <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : "text-slate-400")}>Top Finish</th>
+                <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : "text-slate-400")}>Top Score</th>
+                <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : "text-slate-400")}>Top Avg</th>
+                <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : "text-slate-400")}>180s</th>
+                <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : "text-slate-400")}>170+</th>
+                <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : "text-slate-400")}>130+</th>
+                <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : "text-slate-400")}>90+</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className={clsx(
+              "divide-y",
+              isSyndicate ? "divide-syndicate-red/10" : "divide-slate-100"
+            )}>
               {filteredPlayers.map(player => {
                 const stats = player.stats;
                 const wonLegsPerc = (stats?.totalLegs && stats?.wonLegs) ? ((stats.wonLegs / stats.totalLegs) * 100).toFixed(1) : '0.0';
@@ -67,25 +93,34 @@ export function StatsView() {
                 const sglCO = (stats?.sglCheckoutAttempts && stats?.sglCheckout) ? ((stats.sglCheckout / stats.sglCheckoutAttempts) * 100).toFixed(1) : '0.0';
 
                 return (
-                  <tr key={player.uid} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="p-6 sticky left-0 bg-white group-hover:bg-slate-50/50 z-10 border-r border-slate-100">
+                  <tr key={player.uid} className={clsx(
+                    "transition-colors group",
+                    isSyndicate ? "hover:bg-syndicate-red/5" : "hover:bg-slate-50/50"
+                  )}>
+                    <td className={clsx(
+                      "p-6 sticky left-0 z-10 border-r",
+                      isSyndicate ? "bg-onyx border-syndicate-red/10 group-hover:bg-syndicate-red/5" : "bg-white border-slate-100 group-hover:bg-slate-50/50"
+                    )}>
                       <div className="flex items-center gap-4">
                         <img 
                           src={player.photoURL || `https://ui-avatars.com/api/?name=${player.name}`}
-                          className="w-10 h-10 rounded-xl object-cover ring-2 ring-slate-100"
+                          className={clsx(
+                            "w-10 h-10 rounded-xl object-cover",
+                            isSyndicate ? "stitched-red" : "ring-2 ring-slate-100"
+                          )}
                           referrerPolicy="no-referrer"
                         />
-                        <span className="font-bold text-slate-900 whitespace-nowrap">{player.name}</span>
+                        <span className={clsx("font-bold whitespace-nowrap", isSyndicate ? "text-nasty-cream font-rocker" : "text-slate-900")}>{player.name}</span>
                       </div>
                     </td>
                     <td className="p-6 text-center">
-                      <span className="text-sm font-black text-slate-900">{wonLegsPerc}%</span>
+                      <span className={clsx("text-sm font-black", isSyndicate ? "text-nasty-cream" : "text-slate-900")}>{wonLegsPerc}%</span>
                     </td>
                     <td className="p-6 text-center">
-                      <span className="text-sm font-black text-indigo-600">{stats?.avg?.toFixed(1) || '0.0'}</span>
+                      <span className={clsx("text-sm font-black", isSyndicate ? "text-syndicate-red" : "text-indigo-600")}>{stats?.avg?.toFixed(1) || '0.0'}</span>
                     </td>
                     <td className="p-6 text-center">
-                      <span className="text-sm font-black text-slate-500">{stats?.nineAvg?.toFixed(1) || '0.0'}</span>
+                      <span className={clsx("text-sm font-black", isSyndicate ? "text-steel-gray" : "text-slate-500")}>{stats?.nineAvg?.toFixed(1) || '0.0'}</span>
                     </td>
                     <td className="p-6 text-center">
                       <span className="text-sm font-black text-emerald-600">{dblCO}%</span>
@@ -94,25 +129,28 @@ export function StatsView() {
                       <span className="text-sm font-black text-emerald-500">{sglCO}%</span>
                     </td>
                     <td className="p-6 text-center">
-                      <span className="text-sm font-black text-slate-900">{stats?.topLeg || '-'}</span>
+                      <span className={clsx("text-sm font-black", isSyndicate ? "text-nasty-cream" : "text-slate-900")}>{stats?.topLeg || '-'}</span>
                     </td>
                     <td className="p-6 text-center">
-                      <span className="text-sm font-black text-slate-900">{stats?.topFinish || '-'}</span>
+                      <span className={clsx("text-sm font-black", isSyndicate ? "text-nasty-cream" : "text-slate-900")}>{stats?.topFinish || '-'}</span>
                     </td>
                     <td className="p-6 text-center">
-                      <span className="text-sm font-black text-slate-900">{stats?.topScore || '-'}</span>
+                      <span className={clsx("text-sm font-black", isSyndicate ? "text-nasty-cream" : "text-slate-900")}>{stats?.topScore || '-'}</span>
                     </td>
                     <td className="p-6 text-center">
-                      <span className="text-sm font-black text-slate-900">{stats?.topAvg?.toFixed(1) || '-'}</span>
+                      <span className={clsx("text-sm font-black", isSyndicate ? "text-nasty-cream" : "text-slate-900")}>{stats?.topAvg?.toFixed(1) || '-'}</span>
                     </td>
                     <td className="p-6 text-center">
-                      <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-amber-100 text-amber-700 text-xs font-black">
+                      <div className={clsx(
+                        "inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs font-black",
+                        isSyndicate ? "bg-syndicate-red/20 text-syndicate-red" : "bg-amber-100 text-amber-700"
+                      )}>
                         {stats?.count180s || 0}
                       </div>
                     </td>
-                    <td className="p-6 text-center text-sm font-bold text-slate-600">{stats?.count170plus || 0}</td>
-                    <td className="p-6 text-center text-sm font-bold text-slate-600">{stats?.count130plus || 0}</td>
-                    <td className="p-6 text-center text-sm font-bold text-slate-600">{stats?.count90plus || 0}</td>
+                    <td className={clsx("p-6 text-center text-sm font-bold", isSyndicate ? "text-steel-gray" : "text-slate-600")}>{stats?.count170plus || 0}</td>
+                    <td className={clsx("p-6 text-center text-sm font-bold", isSyndicate ? "text-steel-gray" : "text-slate-600")}>{stats?.count130plus || 0}</td>
+                    <td className={clsx("p-6 text-center text-sm font-bold", isSyndicate ? "text-steel-gray" : "text-slate-600")}>{stats?.count90plus || 0}</td>
                   </tr>
                 );
               })}
