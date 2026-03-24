@@ -1381,7 +1381,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                   <label className="block text-sm font-bold mb-2 opacity-60">Tournament Type</label>
                   <select
                     value={editingTournament.type}
-                    onChange={(e) => setEditingTournament({ ...editingTournament, type: e.target.value as any })}
+                    onChange={(e) => setEditingTournament({ ...editingTournament, type: e.target.value as 'single-elimination' | 'double-elimination' | 'round-robin' })}
                     className={clsx(
                       "w-full px-4 py-3 rounded-xl border outline-none transition-all",
                       isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
@@ -1396,7 +1396,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                   <label className="block text-sm font-bold mb-2 opacity-60">Status</label>
                   <select
                     value={editingTournament.status}
-                    onChange={(e) => setEditingTournament({ ...editingTournament, status: e.target.value as any })}
+                    onChange={(e) => setEditingTournament({ ...editingTournament, status: e.target.value as 'upcoming' | 'live' | 'completed' })}
                     className={clsx(
                       "w-full px-4 py-3 rounded-xl border outline-none transition-all",
                       isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
@@ -1468,7 +1468,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                         value={(editingTournament.gameConfig as X01Config).outRule}
                         onChange={(e) => setEditingTournament({
                           ...editingTournament,
-                          gameConfig: { ...editingTournament.gameConfig, outRule: e.target.value as any }
+                          gameConfig: { ...(editingTournament.gameConfig as X01Config), outRule: e.target.value as 'single' | 'double' | 'triple' }
                         })}
                         className={clsx(
                           "w-full px-3 py-2 rounded-lg border text-sm",
@@ -1489,7 +1489,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                         value={(editingTournament.gameConfig as CricketConfig).mode}
                         onChange={(e) => setEditingTournament({
                           ...editingTournament,
-                          gameConfig: { ...editingTournament.gameConfig, mode: e.target.value as any }
+                          gameConfig: { ...(editingTournament.gameConfig as CricketConfig), mode: e.target.value as 'Standard' | 'Cut Throat' }
                         })}
                         className={clsx(
                           "px-3 py-2 rounded-lg border text-sm",
@@ -1532,6 +1532,6 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
   );
 }
 
-function clsx(...classes: any[]) {
+function clsx(...classes: (string | undefined | null | false)[]) {
   return classes.filter(Boolean).join(' ');
 }
