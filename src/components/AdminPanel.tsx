@@ -4,410 +4,433 @@ import {
   onSnapshot, 
   query, 
   orderBy, 
+  addDoc, 
   updateDoc, 
   doc, 
-  addDoc, 
-  deleteDoc, 
-  Timestamp 
-} from '../firebase';
+  deleteDoc,
+  serverTimestamp 
+} from 'firebase/firestore';
 import { db } from '../firebase';
-import { Player, Season, Tournament, Permission, UserRole } from '../types';
-import { Shield, Users, Calendar, Trophy, Plus, Trash2, Edit2, Check, X } from 'lucide-react';
+import { Tournament, Season, Player, GameType, X01Config, CricketConfig } from '../types';
+import { Plus, Trash2, Calendar, Trophy, Users, CheckCircle2, XCircle, Settings2 } from 'lucide-react';
+import { format } from 'date-fns';
 
-interface AdminPanelProps {
-  currentUser: Player | null;
-  userEmail?: string | null;
-}
-
-const ALL_PERMISSIONS: Permission[] = ['manage_users', 'manage_seasons', 'manage_events', 'edit_scores'];
-
-export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, userEmail }) => {
-  const [activeTab, setActiveTab] = useState<'users' | 'seasons' | 'events'>('users');
-  const [players, setPlayers] = useState<Player[]>([]);
+export function AdminPanel() {
   const [seasons, setSeasons] = useState<Season[]>([]);
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  
-  // Form states
+  const [players, setPlayers] = useState<Player[]>([]);
   const [newSeasonName, setNewSeasonName] = useState('');
-  const [newEventName, setNewEventName] = useState('');
-  const [newEventDate, setNewEventDate] = useState('');
-  const [newEventLocation, setNewEventLocation] = useState('');
-  const [newEventSeasonId, setNewEventSeasonId] = useState('');
-
-  const [editingSeason, setEditingSeason] = useState<Season | null>(null);
-  const [editingEvent, setEditingEvent] = useState<Tournament | null>(null);
+  const [newTournament, setNewTournament] = useState<{
+    name: string;
+    date: string;
+    type: 'single-elimination' | 'double-elimination' | 'round-robin';
+    seasonId: string;
+    gameType: GameType;
+    gameConfig: X01Config | CricketConfig;
+  }>({
+    name: '',
+    date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+    type: 'single-elimination',
+    seasonId: '',
+    gameType: 'X01',
+    gameConfig: {
+      startScore: 301,
+      sets: 1,
+      legs: 2,
+      inRule: 'single',
+      outRule: 'double'
+    } as X01Config
+  });
 
   useEffect(() => {
-    const unsubPlayers = onSnapshot(collection(db, 'players'), (snapshot) => {
-      setPlayers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Player)));
-    });
-    const unsubSeasons = onSnapshot(query(collection(db, 'seasons'), orderBy('startDate', 'desc')), (snapshot) => {
+    const q = query(collection(db, 'seasons'), orderBy('startDate', 'desc'));
+    return onSnapshot(q, (snapshot) => {
       setSeasons(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Season)));
     });
-    const unsubTournaments = onSnapshot(query(collection(db, 'tournaments'), orderBy('date', 'desc')), (snapshot) => {
-      setTournaments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tournament)));
-    });
-
-    return () => {
-      unsubPlayers();
-      unsubSeasons();
-      unsubTournaments();
-    };
   }, []);
 
-  const hasPermission = (perm: Permission) => {
-    if (userEmail?.toLowerCase() === 'kingoflakemoor@gmail.com' || currentUser?.email?.toLowerCase() === 'kingoflakemoor@gmail.com') return true;
-    return currentUser?.permissions?.includes(perm);
-  };
-
-  const togglePermission = async (player: Player, perm: Permission) => {
-    if (!hasPermission('manage_users')) return;
-    const newPermissions = player.permissions?.includes(perm)
-      ? player.permissions.filter(p => p !== perm)
-      : [...(player.permissions || []), perm];
-    
-    await updateDoc(doc(db, 'players', player.id), { permissions: newPermissions });
-  };
-
-  const toggleRole = async (player: Player) => {
-    if (!hasPermission('manage_users')) return;
-    const newRole: UserRole = player.role === 'admin' ? 'player' : 'admin';
-    await updateDoc(doc(db, 'players', player.id), { role: newRole });
-  };
+  useEffect(() => {
+    return onSnapshot(collection(db, 'players'), (snapshot) => {
+      setPlayers(snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Player)));
+    });
+  }, []);
 
   const createSeason = async () => {
-    if (!hasPermission('manage_seasons') || !newSeasonName) return;
+    if (!newSeasonName) return;
     await addDoc(collection(db, 'seasons'), {
       name: newSeasonName,
-      startDate: Timestamp.now(),
-      endDate: Timestamp.now(), // Placeholder
-      status: 'upcoming'
+      startDate: new Date().toISOString(),
+      active: true
     });
     setNewSeasonName('');
   };
 
-  const updateSeason = async (id: string, data: Partial<Season>) => {
-    if (!hasPermission('manage_seasons')) return;
-    await updateDoc(doc(db, 'seasons', id), data);
-    setEditingSeason(null);
+  const toggleSeason = async (id: string, currentActive: boolean) => {
+    // Deactivate all other seasons first
+    if (!currentActive) {
+      const activeSeasons = seasons.filter(s => s.active);
+      for (const s of activeSeasons) {
+        await updateDoc(doc(db, 'seasons', s.id), { active: false });
+      }
+    }
+    await updateDoc(doc(db, 'seasons', id), { active: !currentActive });
   };
 
-  const createEvent = async () => {
-    if (!hasPermission('manage_events') || !newEventName || !newEventDate) return;
+  const createTournament = async () => {
+    if (!newTournament.name || !newTournament.seasonId) return;
     await addDoc(collection(db, 'tournaments'), {
-      name: newEventName,
-      date: Timestamp.fromDate(new Date(newEventDate)),
-      location: newEventLocation,
-      seasonId: newEventSeasonId || null,
-      status: 'draft',
+      ...newTournament,
+      status: 'upcoming',
       participants: []
     });
-    setNewEventName('');
-    setNewEventDate('');
-    setNewEventLocation('');
-    setNewEventSeasonId('');
+    setNewTournament({
+      name: '',
+      date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+      type: 'single-elimination',
+      seasonId: newTournament.seasonId,
+      gameType: 'X01',
+      gameConfig: {
+        startScore: 301,
+        sets: 1,
+        legs: 2,
+        inRule: 'single',
+        outRule: 'double'
+      }
+    });
   };
 
-  const updateEvent = async (id: string, data: Partial<Tournament>) => {
-    if (!hasPermission('manage_events')) return;
-    await updateDoc(doc(db, 'tournaments', id), data);
-    setEditingEvent(null);
+  const deleteTournament = async (id: string) => {
+    if (confirm('Are you sure you want to delete this tournament?')) {
+      await deleteDoc(doc(db, 'tournaments', id));
+    }
   };
 
-  const deleteItem = async (col: string, id: string) => {
-    const perm = col === 'seasons' ? 'manage_seasons' : 'manage_events';
-    if (!hasPermission(perm)) return;
-    if (confirm(`Are you sure you want to delete this ${col.slice(0, -1)}?`)) {
-      await deleteDoc(doc(db, col, id));
+  const updatePlayerRole = async (uid: string, newRole: 'admin' | 'player') => {
+    await updateDoc(doc(db, 'players', uid), { role: newRole });
+  };
+
+  const handleGameTypeChange = (type: GameType) => {
+    if (type === 'X01') {
+      setNewTournament({ 
+        ...newTournament, 
+        gameType: 'X01', 
+        gameConfig: { startScore: 301, sets: 1, legs: 2, inRule: 'single', outRule: 'double' } 
+      });
+    } else {
+      setNewTournament({ 
+        ...newTournament, 
+        gameType: 'Cricket', 
+        gameConfig: { mode: 'Standard', random: false } 
+      });
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="flex items-center gap-3 mb-8">
-        <Shield className="w-8 h-8 text-amber-600" />
-        <h1 className="text-3xl font-bold text-gray-900">Admin Control Panel</h1>
-      </div>
+    <div className="space-y-8 max-w-5xl mx-auto">
+      <header className="mb-12">
+        <h1 className="text-4xl font-bold text-slate-900 mb-2 tracking-tight">Admin Dashboard</h1>
+        <p className="text-slate-500 text-lg">Manage seasons, tournaments, and player permissions.</p>
+      </header>
 
-      {/* Tabs */}
-      <div className="flex gap-4 mb-8 border-b border-gray-200">
-        <button
-          onClick={() => setActiveTab('users')}
-          className={`pb-4 px-2 flex items-center gap-2 font-medium transition-colors ${
-            activeTab === 'users' ? 'border-b-2 border-amber-600 text-amber-600' : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          <Users className="w-5 h-5" />
-          User Management
-        </button>
-        <button
-          onClick={() => setActiveTab('seasons')}
-          className={`pb-4 px-2 flex items-center gap-2 font-medium transition-colors ${
-            activeTab === 'seasons' ? 'border-b-2 border-amber-600 text-amber-600' : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          <Calendar className="w-5 h-5" />
-          Seasons
-        </button>
-        <button
-          onClick={() => setActiveTab('events')}
-          className={`pb-4 px-2 flex items-center gap-2 font-medium transition-colors ${
-            activeTab === 'events' ? 'border-b-2 border-amber-600 text-amber-600' : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          <Trophy className="w-5 h-5" />
-          Events
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        {activeTab === 'users' && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="px-6 py-4 font-semibold text-gray-700">Player</th>
-                  <th className="px-6 py-4 font-semibold text-gray-700">Role</th>
-                  <th className="px-6 py-4 font-semibold text-gray-700">Permissions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {players.map(player => (
-                  <tr key={player.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <img src={player.photoURL || `https://ui-avatars.com/api/?name=${player.name}`} className="w-10 h-10 rounded-full" alt="" />
-                        <div>
-                          <div className="font-medium text-gray-900">{player.name}</div>
-                          <div className="text-sm text-gray-500">{player.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => toggleRole(player)}
-                        disabled={!hasPermission('manage_users') || player.email === 'kingoflakemoor@gmail.com'}
-                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                          player.role === 'admin' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'
-                        }`}
-                      >
-                        {player.role}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-wrap gap-2">
-                        {ALL_PERMISSIONS.map(perm => (
-                          <button
-                            key={perm}
-                            onClick={() => togglePermission(player, perm)}
-                            disabled={!hasPermission('manage_users') || player.role !== 'admin' || player.email === 'kingoflakemoor@gmail.com'}
-                            className={`px-2 py-1 rounded text-xs transition-colors ${
-                              player.permissions?.includes(perm)
-                                ? 'bg-amber-100 text-amber-700 border border-amber-200'
-                                : 'bg-white text-gray-400 border border-gray-200 hover:border-amber-300 hover:text-amber-600'
-                            }`}
-                          >
-                            {perm.replace('_', ' ')}
-                          </button>
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Season Management */}
+        <section className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="bg-indigo-100 p-2 rounded-xl text-indigo-600">
+              <Calendar className="w-6 h-6" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Seasons</h2>
           </div>
-        )}
+          
+          <div className="flex gap-3 mb-8">
+            <input
+              type="text"
+              value={newSeasonName}
+              onChange={(e) => setNewSeasonName(e.target.value)}
+              placeholder="Season Name (e.g. Spring 2024)"
+              className="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+            />
+            <button
+              onClick={createSeason}
+              className="bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-100"
+            >
+              <Plus className="w-6 h-6" />
+            </button>
+          </div>
 
-        {activeTab === 'seasons' && (
-          <div className="p-6">
-            {hasPermission('manage_seasons') && (
-              <div className="flex gap-4 mb-8">
+          <div className="space-y-3">
+            {seasons.map(season => (
+              <div key={season.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <div>
+                  <p className="font-bold text-slate-900">{season.name}</p>
+                  <p className="text-xs text-slate-500">Started {format(new Date(season.startDate), 'MMM d, yyyy')}</p>
+                </div>
+                <button
+                  onClick={() => toggleSeason(season.id, season.active)}
+                  className={clsx(
+                    "px-4 py-2 rounded-lg text-sm font-bold transition-all",
+                    season.active 
+                      ? "bg-emerald-100 text-emerald-700 border border-emerald-200" 
+                      : "bg-slate-200 text-slate-600 border border-slate-300"
+                  )}
+                >
+                  {season.active ? 'Active' : 'Inactive'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Tournament Creation */}
+        <section className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="bg-amber-100 p-2 rounded-xl text-amber-600">
+              <Trophy className="w-6 h-6" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">New Tournament</h2>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">Tournament Name</label>
+              <input
+                type="text"
+                value={newTournament.name}
+                onChange={(e) => setNewTournament({ ...newTournament, name: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                placeholder="e.g. Friday Night Open"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Date & Time</label>
                 <input
-                  type="text"
-                  placeholder="New Season Name (e.g. Spring 2024)"
-                  value={newSeasonName}
-                  onChange={(e) => setNewSeasonName(e.target.value)}
-                  className="flex-1 px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  type="datetime-local"
+                  value={newTournament.date}
+                  onChange={(e) => setNewTournament({ ...newTournament, date: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
-                <button
-                  onClick={createSeason}
-                  className="bg-amber-600 text-white px-6 py-2 rounded-xl font-semibold hover:bg-amber-700 transition-colors flex items-center gap-2"
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Season</label>
+                <select
+                  value={newTournament.seasonId}
+                  onChange={(e) => setNewTournament({ ...newTournament, seasonId: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
                 >
-                  <Plus className="w-5 h-5" />
-                  Create Season
+                  <option value="">Select Season</option>
+                  {seasons.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-100">
+              <div className="flex items-center gap-2 mb-4">
+                <Settings2 className="w-4 h-4 text-slate-400" />
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Game Rules</h3>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <button
+                  onClick={() => handleGameTypeChange('X01')}
+                  className={clsx(
+                    "py-3 rounded-xl font-bold text-sm transition-all border",
+                    newTournament.gameType === 'X01' 
+                      ? "bg-indigo-50 border-indigo-200 text-indigo-700" 
+                      : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+                  )}
+                >
+                  X01
+                </button>
+                <button
+                  onClick={() => handleGameTypeChange('Cricket')}
+                  className={clsx(
+                    "py-3 rounded-xl font-bold text-sm transition-all border",
+                    newTournament.gameType === 'Cricket' 
+                      ? "bg-indigo-50 border-indigo-200 text-indigo-700" 
+                      : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+                  )}
+                >
+                  Cricket
                 </button>
               </div>
-            )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {seasons.map(season => (
-                <div key={season.id} className="p-6 rounded-2xl border border-gray-100 bg-gray-50 relative group">
-                  {editingSeason?.id === season.id ? (
-                    <div className="space-y-4">
-                      <input 
-                        type="text" 
-                        value={editingSeason.name}
-                        onChange={(e) => setEditingSeason({ ...editingSeason, name: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg border border-gray-200"
-                      />
+              {newTournament.gameType === 'X01' && (
+                <div className="space-y-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Start Score</label>
                       <select
-                        value={editingSeason.status}
-                        onChange={(e) => setEditingSeason({ ...editingSeason, status: e.target.value as any })}
-                        className="w-full px-3 py-2 rounded-lg border border-gray-200"
+                        value={(newTournament.gameConfig as X01Config).startScore}
+                        onChange={(e) => setNewTournament({
+                          ...newTournament,
+                          gameConfig: { ...(newTournament.gameConfig as X01Config), startScore: parseInt(e.target.value) as 301 | 501 | 701 }
+                        })}
+                        className="w-full bg-white px-3 py-2 rounded-lg border border-slate-200 text-sm"
                       >
-                        <option value="upcoming">Upcoming</option>
-                        <option value="active">Active</option>
-                        <option value="completed">Completed</option>
+                        <option value={301}>301</option>
+                        <option value={501}>501</option>
+                        <option value={701}>701</option>
                       </select>
-                      <div className="flex gap-2">
-                        <button onClick={() => updateSeason(season.id, { name: editingSeason.name, status: editingSeason.status })} className="flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-bold">Save</button>
-                        <button onClick={() => setEditingSeason(null)} className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg text-sm font-bold">Cancel</button>
-                      </div>
                     </div>
-                  ) : (
-                    <>
-                      <div className="flex justify-between items-start mb-4">
-                        <h3 className="text-xl font-bold text-gray-900">{season.name}</h3>
-                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => setEditingSeason(season)} className="text-gray-400 hover:text-amber-600"><Edit2 className="w-5 h-5" /></button>
-                          <button onClick={() => deleteItem('seasons', season.id)} className="text-gray-400 hover:text-red-500"><Trash2 className="w-5 h-5" /></button>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                        <Calendar className="w-4 h-4" />
-                        {season.startDate?.toDate().toLocaleDateString()} - {season.endDate?.toDate().toLocaleDateString()}
-                      </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                        season.status === 'active' ? 'bg-amber-100 text-amber-700' : 'bg-gray-200 text-gray-600'
-                      }`}>
-                        {season.status}
-                      </span>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'events' && (
-          <div className="p-6">
-            {hasPermission('manage_events') && (
-              <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 mb-8">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Create New Event</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <input
-                    type="text"
-                    placeholder="Event Name"
-                    value={newEventName}
-                    onChange={(e) => setNewEventName(e.target.value)}
-                    className="px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  />
-                  <input
-                    type="datetime-local"
-                    value={newEventDate}
-                    onChange={(e) => setNewEventDate(e.target.value)}
-                    className="px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Location"
-                    value={newEventLocation}
-                    onChange={(e) => setNewEventLocation(e.target.value)}
-                    className="px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  />
-                  <select
-                    value={newEventSeasonId}
-                    onChange={(e) => setNewEventSeasonId(e.target.value)}
-                    className="px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  >
-                    <option value="">Standalone Event</option>
-                    {seasons.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <button
-                  onClick={createEvent}
-                  className="w-full bg-amber-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-amber-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <Plus className="w-5 h-5" />
-                  Create Event
-                </button>
-              </div>
-            )}
-
-            <div className="space-y-4">
-              {tournaments.map(tournament => (
-                <div key={tournament.id} className="p-4 rounded-xl border border-gray-100 hover:border-amber-200 transition-colors flex items-center justify-between group">
-                  {editingEvent?.id === tournament.id ? (
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-                      <input 
-                        type="text" 
-                        value={editingEvent.name}
-                        onChange={(e) => setEditingEvent({ ...editingEvent, name: e.target.value })}
-                        className="px-3 py-2 rounded-lg border border-gray-200"
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Sets</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={(newTournament.gameConfig as X01Config).sets}
+                        onChange={(e) => setNewTournament({
+                          ...newTournament,
+                          gameConfig: { ...(newTournament.gameConfig as X01Config), sets: parseInt(e.target.value) }
+                        })}
+                        className="w-full bg-white px-3 py-2 rounded-lg border border-slate-200 text-sm"
                       />
-                      <input 
-                        type="text" 
-                        value={editingEvent.location || ''}
-                        onChange={(e) => setEditingEvent({ ...editingEvent, location: e.target.value })}
-                        className="px-3 py-2 rounded-lg border border-gray-200"
-                        placeholder="Location"
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Legs per Set</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={(newTournament.gameConfig as X01Config).legs}
+                        onChange={(e) => setNewTournament({
+                          ...newTournament,
+                          gameConfig: { ...(newTournament.gameConfig as X01Config), legs: parseInt(e.target.value) }
+                        })}
+                        className="w-full bg-white px-3 py-2 rounded-lg border border-slate-200 text-sm"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Out Rule</label>
                       <select
-                        value={editingEvent.seasonId || ''}
-                        onChange={(e) => setEditingEvent({ ...editingEvent, seasonId: e.target.value })}
-                        className="px-3 py-2 rounded-lg border border-gray-200"
+                        value={(newTournament.gameConfig as X01Config).outRule}
+                        onChange={(e) => setNewTournament({
+                          ...newTournament,
+                          gameConfig: { ...(newTournament.gameConfig as X01Config), outRule: e.target.value as 'single' | 'double' | 'triple' }
+                        })}
+                        className="w-full bg-white px-3 py-2 rounded-lg border border-slate-200 text-sm"
                       >
-                        <option value="">Standalone</option>
-                        {seasons.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        <option value="single">Single Out</option>
+                        <option value="double">Double Out</option>
+                        <option value="triple">Triple Out</option>
                       </select>
-                      <div className="flex gap-2">
-                        <button onClick={() => updateEvent(tournament.id, { name: editingEvent.name, location: editingEvent.location, seasonId: editingEvent.seasonId })} className="flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-bold">Save</button>
-                        <button onClick={() => setEditingEvent(null)} className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg text-sm font-bold">Cancel</button>
-                      </div>
                     </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-4">
-                        <div className="bg-amber-50 p-3 rounded-xl text-amber-600">
-                          <Trophy className="w-6 h-6" />
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-gray-900">{tournament.name}</h4>
-                          <div className="text-sm text-gray-500 flex items-center gap-3">
-                            <span>{tournament.date?.toDate().toLocaleDateString()}</span>
-                            {tournament.location && <span>• {tournament.location}</span>}
-                            {tournament.seasonId && (
-                              <span className="text-amber-600 font-medium">
-                                • {seasons.find(s => s.id === tournament.seasonId)?.name}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                          tournament.status === 'active' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'
-                        }`}>
-                          {tournament.status}
-                        </span>
-                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => setEditingEvent(tournament)} className="text-gray-400 hover:text-amber-600"><Edit2 className="w-5 h-5" /></button>
-                          <button onClick={() => deleteItem('tournaments', tournament.id)} className="text-gray-400 hover:text-red-500"><Trash2 className="w-5 h-5" /></button>
-                        </div>
-                      </div>
-                    </>
-                  )}
+                  </div>
                 </div>
-              ))}
+              )}
+
+              {newTournament.gameType === 'Cricket' && (
+                <div className="space-y-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-bold text-slate-700">Scoring Mode</label>
+                    <select
+                      value={(newTournament.gameConfig as CricketConfig).mode}
+                      onChange={(e) => setNewTournament({
+                        ...newTournament,
+                        gameConfig: { ...(newTournament.gameConfig as CricketConfig), mode: e.target.value as 'Standard' | 'Cut Throat' }
+                      })}
+                      className="bg-white px-3 py-2 rounded-lg border border-slate-200 text-sm"
+                    >
+                      <option value="Standard">Standard</option>
+                      <option value="Cut Throat">Cut Throat</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-bold text-slate-700">Random Numbers</label>
+                    <button
+                      onClick={() => setNewTournament({
+                        ...newTournament,
+                        gameConfig: { ...(newTournament.gameConfig as CricketConfig), random: !(newTournament.gameConfig as CricketConfig).random }
+                      })}
+                      className={clsx(
+                        "w-12 h-6 rounded-full transition-all relative",
+                        (newTournament.gameConfig as CricketConfig).random ? "bg-indigo-600" : "bg-slate-300"
+                      )}
+                    >
+                      <div className={clsx(
+                        "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
+                        (newTournament.gameConfig as CricketConfig).random ? "right-1" : "left-1"
+                      )} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
+
+            <button
+              onClick={createTournament}
+              disabled={!newTournament.name || !newTournament.seasonId}
+              className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-100 mt-4"
+            >
+              Create Tournament
+            </button>
           </div>
-        )}
+        </section>
       </div>
+
+      {/* Player Management */}
+      <section className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="bg-blue-100 p-2 rounded-xl text-blue-600">
+            <Users className="w-6 h-6" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900">Player Management</h2>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-slate-100">
+                <th className="pb-4 font-bold text-slate-500 text-sm uppercase tracking-wider">Player</th>
+                <th className="pb-4 font-bold text-slate-500 text-sm uppercase tracking-wider">Email</th>
+                <th className="pb-4 font-bold text-slate-500 text-sm uppercase tracking-wider">Role</th>
+                <th className="pb-4 font-bold text-slate-500 text-sm uppercase tracking-wider text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {players.map(p => (
+                <tr key={p.uid}>
+                  <td className="py-4">
+                    <div className="flex items-center gap-3">
+                      <img 
+                        src={p.photoURL || `https://ui-avatars.com/api/?name=${p.name}`} 
+                        className="w-8 h-8 rounded-lg object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                      <span className="font-bold text-slate-900">{p.name}</span>
+                    </div>
+                  </td>
+                  <td className="py-4 text-slate-500 text-sm">{p.email}</td>
+                  <td className="py-4">
+                    <span className={clsx(
+                      "px-3 py-1 rounded-full text-xs font-bold",
+                      p.role === 'admin' ? "bg-purple-100 text-purple-700" : "bg-slate-100 text-slate-600"
+                    )}>
+                      {p.role}
+                    </span>
+                  </td>
+                  <td className="py-4 text-right">
+                    <select
+                      value={p.role}
+                      onChange={(e) => updatePlayerRole(p.uid, e.target.value as 'admin' | 'player')}
+                      className="text-sm border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="player">Player</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
-};
+}
+
+function clsx(...classes: any[]) {
+  return classes.filter(Boolean).join(' ');
+}

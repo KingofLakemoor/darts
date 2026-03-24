@@ -2,78 +2,34 @@
   "entities": {
     "Player": {
       "title": "Player",
-      "description": "A darts player in the league.",
+      "description": "A dart club player",
       "type": "object",
       "properties": {
-        "name": { "type": "string", "description": "The player's full name." },
-        "email": { "type": "string", "format": "email", "description": "The player's email address." },
-        "photoURL": { "type": "string", "description": "URL to the player's profile picture." },
-        "uid": { "type": "string", "description": "The user's unique ID." },
-        "role": { "type": "string", "enum": ["admin", "player"], "description": "The user's role in the system." },
-        "permissions": { 
-          "type": "array", 
-          "items": { "type": "string" }, 
-          "description": "List of specific administrative permissions (e.g., 'manage_users', 'manage_seasons', 'manage_events', 'edit_scores')." 
-        },
-        "stats": {
-          "type": "object",
-          "properties": {
-            "wins": { "type": "integer" },
-            "losses": { "type": "integer" },
-            "avgScore": { "type": "number" }
-          }
-        }
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "player"] }
       },
-      "required": ["name", "role"]
-    },
-    "Season": {
-      "title": "Season",
-      "description": "A league season containing multiple events.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string", "description": "The name of the season (e.g., 'Spring 2024')." },
-        "startDate": { "type": "string", "format": "date-time" },
-        "endDate": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["upcoming", "active", "completed"] }
-      },
-      "required": ["name", "status"]
+      "required": ["uid", "name", "role"]
     },
     "Tournament": {
       "title": "Tournament",
-      "description": "A darts tournament (event) with a double-elimination bracket.",
+      "description": "A dart tournament",
       "type": "object",
       "properties": {
-        "name": { "type": "string", "description": "The name of the tournament." },
-        "date": { "type": "string", "format": "date-time", "description": "When the tournament starts." },
-        "location": { "type": "string", "description": "Where the event is held." },
-        "seasonId": { "type": "string", "description": "The ID of the season this event belongs to (optional for standalone events)." },
-        "status": { "type": "string", "enum": ["draft", "active", "completed"] },
-        "bracket": { "type": "string", "description": "JSON string representing the bracket state." },
-        "participants": { "type": "array", "items": { "type": "string" }, "description": "List of player IDs." }
+        "name": { "type": "string" },
+        "date": { "type": "string" },
+        "status": { "type": "string", "enum": ["upcoming", "live", "completed"] },
+        "type": { "type": "string" }
       },
-      "required": ["name", "status", "date"]
-    },
-    "Match": {
-      "title": "Match",
-      "description": "A single match between two players.",
-      "type": "object",
-      "properties": {
-        "tournamentId": { "type": "string" },
-        "player1Id": { "type": "string" },
-        "player2Id": { "type": "string" },
-        "score1": { "type": "integer" },
-        "score2": { "type": "integer" },
-        "status": { "type": "string", "enum": ["pending", "live", "completed"] },
-        "winnerId": { "type": "string" },
-        "bracketPosition": { "type": "string", "description": "e.g., 'WB-R1-M1' or 'LB-R1-M1'" }
-      },
-      "required": ["tournamentId", "player1Id", "player2Id", "status"]
+      "required": ["name", "date", "status", "type"]
     }
   },
   "firestore": {
-    "/players": { "schema": "Player", "description": "Collection of all players." },
-    "/seasons": { "schema": "Season", "description": "Collection of all league seasons." },
-    "/tournaments": { "schema": "Tournament", "description": "Collection of all tournaments." },
-    "/tournaments/{tournamentId}/matches": { "schema": "Match", "description": "Matches within a specific tournament." }
+    "/players/{uid}": { "schema": "Player", "description": "Player profiles" },
+    "/tournaments/{tournamentId}": { "schema": "Tournament", "description": "Tournament data" },
+    "/tournaments/{tournamentId}/matches/{matchId}": { "schema": "Match", "description": "Match data" },
+    "/seasons/{seasonId}": { "schema": "Season", "description": "Season data" }
   }
 }

@@ -1,393 +1,293 @@
 import React, { useState, useEffect } from 'react';
-import { Tournament, Player, Match, Permission } from '../types';
-import { db, collection, onSnapshot, query, where, updateDoc, doc, addDoc } from '../firebase';
-import { Trophy, GitBranch, Target, ChevronRight, User, X, Check } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { collection, onSnapshot, query, where, doc, updateDoc, addDoc, getDocs, writeBatch } from 'firebase/firestore';
+import { db, auth } from '../firebase';
+import { Tournament, Match, Player } from '../types';
+import { Trophy, Target, Users, Play, CheckCircle2, Layout, List } from 'lucide-react';
+import { generateBracket } from '../utils/bracket';
+import { ScorerView } from './ScorerView';
+import { motion } from 'motion/react';
+import { clsx } from 'clsx';
 
-interface BracketViewProps {
-  tournaments: Tournament[];
-  players: Player[];
-  currentUser: Player | null;
+interface Props {
+  tournament: Tournament;
 }
 
-export default function BracketView({ tournaments, players, currentUser }: BracketViewProps) {
-  const [activeTournament, setActiveTournament] = useState<Tournament | null>(null);
+export function BracketView({ tournament }: Props) {
   const [matches, setMatches] = useState<Match[]>([]);
-  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
-
-  const hasPermission = (perm: Permission) => {
-    if (currentUser?.email?.toLowerCase() === 'kingoflakemoor@gmail.com') return true;
-    return currentUser?.permissions?.includes(perm);
-  };
-
-  const getPlayerName = (id: string) => {
-    if (id === 'BYE') return 'BYE';
-    if (id === 'TBD') return 'TBD';
-    return players.find(p => p.id === id)?.name || id;
-  };
+  const [players, setPlayers] = useState<Record<string, Player>>({});
+  const [activeMatch, setActiveMatch] = useState<Match | null>(null);
+  const [viewMode, setViewMode] = useState<'bracket' | 'list'>('bracket');
+  const isAdmin = auth.currentUser?.email === 'kingoflakemoor@gmail.com';
 
   useEffect(() => {
-    const active = tournaments.find(t => t.status === 'active') || tournaments[0];
-    setActiveTournament(active || null);
-  }, [tournaments]);
-
-  useEffect(() => {
-    if (!activeTournament) return;
-    
-    const q = query(collection(db, `tournaments/${activeTournament.id}/matches`));
-    const unsub = onSnapshot(q, (snapshot) => {
+    const unsubscribe = onSnapshot(collection(db, 'tournaments', tournament.id, 'matches'), (snapshot) => {
       setMatches(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Match)));
     });
-    return () => unsub();
-  }, [activeTournament]);
+    return () => unsubscribe();
+  }, [tournament.id]);
 
-  const handleUpdateScore = async (matchId: string, l1: number, l2: number, winnerId: string) => {
-    if (!activeTournament) return;
-    try {
-      const currentMatch = matches.find(m => m.id === matchId);
-      if (!currentMatch) return;
-
-      const loserId = winnerId === currentMatch.player1Id ? currentMatch.player2Id : currentMatch.player1Id;
-
-      const matchDoc = doc(db, `tournaments/${activeTournament.id}/matches`, matchId);
-      await updateDoc(matchDoc, {
-        legs1: l1,
-        legs2: l2,
-        winnerId,
-        status: 'completed'
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'players'), (snapshot) => {
+      const playerMap: Record<string, Player> = {};
+      snapshot.docs.forEach(doc => {
+        playerMap[doc.id] = doc.data() as Player;
       });
+      setPlayers(playerMap);
+    });
+    return () => unsubscribe();
+  }, []);
 
-      // Bracket Progression Logic
-      const pos = currentMatch.bracketPosition || '';
-      const [type, roundStr, matchStr] = pos.split('-');
-      const round = parseInt(roundStr.replace('R', ''));
-      const matchNum = parseInt(matchStr.replace('M', ''));
+  const startTournament = async () => {
+    if (tournament.participants.length < 2) return;
+    
+    const batch = writeBatch(db);
+    const generatedMatches = generateBracket(
+      tournament.participants, 
+      tournament.id,
+      tournament.gameType,
+      tournament.gameConfig
+    );
+    
+    generatedMatches.forEach(match => {
+      const matchRef = doc(collection(db, 'tournaments', tournament.id, 'matches'));
+      batch.set(matchRef, match);
+    });
 
-      if (type === 'WB') {
-        // Move winner to next WB round
-        const nextWBRound = round + 1;
-        const nextWBMatchNum = Math.ceil(matchNum / 2);
-        const nextWBPos = `WB-R${nextWBRound}-M${nextWBMatchNum}`;
-        
-        const nextWBMatch = matches.find(m => m.bracketPosition === nextWBPos);
-        if (nextWBMatch) {
-          const isP1 = matchNum % 2 !== 0;
-          await updateDoc(doc(db, `tournaments/${activeTournament.id}/matches`, nextWBMatch.id), {
-            [isP1 ? 'player1Id' : 'player2Id']: winnerId
-          });
-        } else if (round < 3) { // Create if doesn't exist and not at final round
-           await addDoc(collection(db, `tournaments/${activeTournament.id}/matches`), {
-            tournamentId: activeTournament.id,
-            player1Id: winnerId,
-            player2Id: 'TBD',
-            score1: 0,
-            score2: 0,
-            legs1: 0,
-            legs2: 0,
-            status: 'pending',
-            bracketPosition: nextWBPos
-          });
-        }
+    batch.update(doc(db, 'tournaments', tournament.id), { status: 'live' });
+    await batch.commit();
+  };
 
-        // Move loser to LB
-        const lbRound = (round - 1) * 2 + 1;
-        const lbPos = `LB-R${lbRound}-M${matchNum}`;
-        const lbMatch = matches.find(m => m.bracketPosition === lbPos);
-        if (lbMatch) {
-          const isP1 = matchNum % 2 !== 0;
-          await updateDoc(doc(db, `tournaments/${activeTournament.id}/matches`, lbMatch.id), {
-            [isP1 ? 'player1Id' : 'player2Id']: loserId
-          });
-        } else {
-          await addDoc(collection(db, `tournaments/${activeTournament.id}/matches`), {
-            tournamentId: activeTournament.id,
-            player1Id: loserId,
-            player2Id: 'TBD',
-            score1: 0,
-            score2: 0,
-            legs1: 0,
-            legs2: 0,
-            status: 'pending',
-            bracketPosition: lbPos
-          });
-        }
-      } else if (type === 'LB') {
-        // Move winner to next LB round
-        const nextLBRound = round + 1;
-        const nextLBMatchNum = Math.ceil(matchNum / 2);
-        const nextLBPos = `LB-R${nextLBRound}-M${nextLBMatchNum}`;
-        
-        const nextLBMatch = matches.find(m => m.bracketPosition === nextLBPos);
-        if (nextLBMatch) {
-          const isP1 = matchNum % 2 !== 0;
-          await updateDoc(doc(db, `tournaments/${activeTournament.id}/matches`, nextLBMatch.id), {
-            [isP1 ? 'player1Id' : 'player2Id']: winnerId
-          });
-        }
-      }
-
-      setSelectedMatch(null);
-    } catch (error) {
-      console.error("Error updating score:", error);
+  const joinTournament = async () => {
+    if (!auth.currentUser) return;
+    const newParticipants = [...tournament.participants];
+    if (!newParticipants.includes(auth.currentUser.uid)) {
+      newParticipants.push(auth.currentUser.uid);
+      await updateDoc(doc(db, 'tournaments', tournament.id), { participants: newParticipants });
     }
   };
 
-  if (!activeTournament) {
+  if (activeMatch) {
     return (
-      <div className="p-20 text-center">
-        <Trophy className="w-16 h-16 text-zinc-800 mx-auto mb-6" />
-        <h3 className="text-xl font-bold mb-2">No Active Tournament</h3>
-        <p className="text-zinc-500">Start a tournament to view the bracket.</p>
-      </div>
+      <ScorerView 
+        match={activeMatch} 
+        tournamentId={tournament.id}
+        player1={players[activeMatch.player1Id]}
+        player2={players[activeMatch.player2Id]}
+        onClose={() => setActiveMatch(null)}
+      />
     );
   }
 
-  const wbMatches = matches.filter(m => m.bracketPosition?.startsWith('WB'));
-  const lbMatches = matches.filter(m => m.bracketPosition?.startsWith('LB'));
+  const rounds = Array.from(new Set(matches.map(m => m.round))).sort((a, b) => a - b);
 
   return (
-    <div className="p-6 overflow-x-auto">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-12">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/20">
-              <GitBranch className="w-6 h-6 text-amber-500" />
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold">{activeTournament.name}</h3>
-              <p className="text-zinc-500 text-sm">Double Elimination Bracket</p>
-            </div>
+    <div className="space-y-8">
+      <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h2 className="text-3xl font-bold text-slate-900 mb-2">{tournament.name}</h2>
+          <div className="flex items-center gap-4 text-slate-500 font-medium">
+            <span className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              {tournament.participants.length} Players
+            </span>
+            <span className="w-1 h-1 bg-slate-300 rounded-full" />
+            <span className="capitalize">{tournament.status}</span>
           </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {tournament.status === 'upcoming' && (
+            <>
+              {!tournament.participants.includes(auth.currentUser?.uid || '') && (
+                <button
+                  onClick={joinTournament}
+                  className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                >
+                  Join Tournament
+                </button>
+              )}
+              {isAdmin && (
+                <button
+                  onClick={startTournament}
+                  disabled={tournament.participants.length < 2}
+                  className="bg-emerald-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50"
+                >
+                  Start Tournament
+                </button>
+              )}
+            </>
+          )}
           
-          <div className="flex gap-2">
-            {tournaments.length > 1 && (
-              <select 
-                className="bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm"
-                onChange={(e) => setActiveTournament(tournaments.find(t => t.id === e.target.value) || null)}
-                value={activeTournament.id}
+          {tournament.status !== 'upcoming' && (
+            <div className="flex bg-slate-100 p-1 rounded-xl">
+              <button 
+                onClick={() => setViewMode('bracket')}
+                className={clsx(
+                  "p-2 rounded-lg transition-all",
+                  viewMode === 'bracket' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                )}
               >
-                {tournaments.map(t => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </select>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-20">
-          <section>
-            <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
-              Winners Bracket
-              <div className="h-px flex-1 bg-white/5" />
-            </h4>
-            
-            <div className="flex gap-12">
-              <BracketRound 
-                title="Round 1" 
-                matches={wbMatches.filter(m => m.bracketPosition?.includes('R1'))} 
-                onMatchClick={setSelectedMatch}
-                getPlayerName={getPlayerName}
-              />
-              <BracketRound 
-                title="Semi Finals" 
-                matches={wbMatches.filter(m => m.bracketPosition?.includes('R2'))} 
-                onMatchClick={setSelectedMatch}
-                getPlayerName={getPlayerName}
-              />
-              <BracketRound 
-                title="Winners Final" 
-                matches={wbMatches.filter(m => m.bracketPosition?.includes('R3'))} 
-                onMatchClick={setSelectedMatch}
-                getPlayerName={getPlayerName}
-              />
+                <Layout className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={() => setViewMode('list')}
+                className={clsx(
+                  "p-2 rounded-lg transition-all",
+                  viewMode === 'list' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                )}
+              >
+                <List className="w-5 h-5" />
+              </button>
             </div>
-          </section>
-
-          <section>
-            <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
-              Losers Bracket
-              <div className="h-px flex-1 bg-white/5" />
-            </h4>
-            
-            <div className="flex gap-12">
-              <BracketRound 
-                title="L-Round 1" 
-                matches={lbMatches.filter(m => m.bracketPosition?.includes('R1'))} 
-                onMatchClick={setSelectedMatch}
-                getPlayerName={getPlayerName}
-              />
-              <BracketRound 
-                title="L-Round 2" 
-                matches={lbMatches.filter(m => m.bracketPosition?.includes('R2'))} 
-                onMatchClick={setSelectedMatch}
-                getPlayerName={getPlayerName}
-              />
-              <BracketRound 
-                title="Losers Final" 
-                matches={lbMatches.filter(m => m.bracketPosition?.includes('R3'))} 
-                onMatchClick={setSelectedMatch}
-                getPlayerName={getPlayerName}
-              />
-            </div>
-          </section>
+          )}
         </div>
       </div>
 
-      <AnimatePresence>
-        {selectedMatch && (
-          <MatchScorerModal 
-            match={selectedMatch} 
-            onClose={() => setSelectedMatch(null)} 
-            onSave={handleUpdateScore}
-            getPlayerName={getPlayerName}
-            isAdmin={hasPermission('edit_scores')}
+      {tournament.status === 'upcoming' && (
+        <div className="bg-white p-8 rounded-3xl border border-slate-200">
+          <h3 className="text-xl font-bold text-slate-900 mb-6">Registered Players</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {tournament.participants.map(uid => (
+              <div key={uid} className="flex flex-col items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <img 
+                  src={players[uid]?.photoURL || `https://ui-avatars.com/api/?name=${players[uid]?.name}`}
+                  className="w-12 h-12 rounded-xl object-cover ring-2 ring-white"
+                  referrerPolicy="no-referrer"
+                />
+                <span className="text-sm font-bold text-slate-900 text-center truncate w-full">
+                  {players[uid]?.name || 'Loading...'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tournament.status !== 'upcoming' && viewMode === 'bracket' && (
+        <div className="overflow-x-auto pb-8">
+          <div className="flex gap-12 min-w-max p-4">
+            {rounds.map(round => (
+              <div key={round} className="w-72 space-y-8">
+                <div className="text-center mb-8">
+                  <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Round {round}</span>
+                </div>
+                <div className="flex flex-col justify-around h-full gap-8">
+                  {matches.filter(m => m.round === round).sort((a, b) => a.position - b.position).map(match => (
+                    <MatchCard 
+                      key={match.id} 
+                      match={match} 
+                      players={players} 
+                      isAdmin={isAdmin}
+                      onScore={() => setActiveMatch(match)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tournament.status !== 'upcoming' && viewMode === 'list' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {matches.sort((a, b) => b.round - a.round || a.position - b.position).map(match => (
+            <MatchCard 
+              key={match.id} 
+              match={match} 
+              players={players} 
+              isAdmin={isAdmin}
+              onScore={() => setActiveMatch(match)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MatchCard({ match, players, isAdmin, onScore }: { 
+  match: Match, 
+  players: Record<string, Player>, 
+  isAdmin: boolean,
+  onScore: () => void 
+}) {
+  const p1 = players[match.player1Id];
+  const p2 = players[match.player2Id];
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden group hover:border-indigo-300 transition-all">
+      <div className="p-4 space-y-3">
+        <PlayerRow 
+          player={p1} 
+          score={match.score1} 
+          isWinner={match.winnerId === match.player1Id} 
+          isPlaceholder={!match.player1Id}
+        />
+        <div className="h-px bg-slate-50" />
+        <PlayerRow 
+          player={p2} 
+          score={match.score2} 
+          isWinner={match.winnerId === match.player2Id} 
+          isPlaceholder={!match.player2Id}
+        />
+      </div>
+      
+      {isAdmin && match.status !== 'completed' && match.player1Id && match.player2Id && (
+        <button
+          onClick={onScore}
+          className="w-full py-3 bg-slate-50 hover:bg-indigo-600 hover:text-white text-slate-600 text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+        >
+          <Play className="w-3 h-3" />
+          Score Match
+        </button>
+      )}
+      
+      {match.status === 'completed' && (
+        <div className="py-2 bg-slate-50 text-center">
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Final Result</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PlayerRow({ player, score, isWinner, isPlaceholder }: { 
+  player?: Player, 
+  score: number, 
+  isWinner: boolean,
+  isPlaceholder: boolean
+}) {
+  return (
+    <div className={clsx(
+      "flex items-center justify-between gap-4 transition-opacity",
+      isPlaceholder ? "opacity-30" : "opacity-100"
+    )}>
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="relative">
+          <img 
+            src={player?.photoURL || `https://ui-avatars.com/api/?name=${player?.name || '?'}`} 
+            className="w-8 h-8 rounded-lg object-cover"
+            referrerPolicy="no-referrer"
           />
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function BracketRound({ title, matches, onMatchClick, getPlayerName }: { title: string, matches: Match[], onMatchClick: (m: Match) => void, getPlayerName: (id: string) => string }) {
-  if (matches.length === 0) return null;
-
-  return (
-    <div className="flex flex-col gap-8 min-w-[280px]">
-      <div className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest text-center">{title}</div>
-      <div className="flex flex-col justify-around flex-1 gap-12">
-        {matches.map((match) => (
-          <button 
-            key={match.id} 
-            onClick={() => onMatchClick(match)}
-            className="relative group text-left w-full"
-          >
-            <div className="bg-zinc-900/60 border border-white/10 rounded-2xl overflow-hidden shadow-xl hover:border-amber-500/30 transition-all">
-              <div className={cn(
-                "p-4 border-b border-white/5 flex items-center justify-between transition-colors",
-                match.winnerId === match.player1Id ? "bg-amber-500/10" : "bg-white/5"
-              )}>
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-lg bg-black/40 flex items-center justify-center text-[10px] font-bold">
-                    {getPlayerName(match.player1Id).slice(0, 2).toUpperCase()}
-                  </div>
-                  <span className={cn(
-                    "text-sm font-medium",
-                    match.winnerId === match.player1Id ? "text-amber-500" : "text-zinc-400"
-                  )}>
-                    {getPlayerName(match.player1Id)}
-                  </span>
-                </div>
-                <span className="font-mono font-bold text-amber-500">{match.legs1 || 0}</span>
-              </div>
-              <div className={cn(
-                "p-4 flex items-center justify-between transition-colors",
-                match.winnerId === match.player2Id ? "bg-amber-500/10" : "transparent"
-              )}>
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-lg bg-black/40 flex items-center justify-center text-[10px] font-bold">
-                    {getPlayerName(match.player2Id).slice(0, 2).toUpperCase()}
-                  </div>
-                  <span className={cn(
-                    "text-sm font-medium",
-                    match.winnerId === match.player2Id ? "text-amber-500" : "text-zinc-400"
-                  )}>
-                    {getPlayerName(match.player2Id)}
-                  </span>
-                </div>
-                <span className="font-mono font-bold text-amber-500">{match.legs2 || 0}</span>
-              </div>
+          {isWinner && (
+            <div className="absolute -top-1 -right-1 bg-amber-400 rounded-full p-0.5 border-2 border-white">
+              <Trophy className="w-2 h-2 text-white" />
             </div>
-          </button>
-        ))}
+          )}
+        </div>
+        <span className={clsx(
+          "text-sm font-bold truncate",
+          isWinner ? "text-slate-900" : "text-slate-500"
+        )}>
+          {player?.name || 'TBD'}
+        </span>
       </div>
+      <span className={clsx(
+        "text-lg font-black tabular-nums",
+        isWinner ? "text-indigo-600" : "text-slate-400"
+      )}>
+        {score}
+      </span>
     </div>
   );
-}
-
-function MatchScorerModal({ match, onClose, onSave, getPlayerName, isAdmin }: { match: Match, onClose: () => void, onSave: (id: string, l1: number, l2: number, w: string) => void, getPlayerName: (id: string) => string, isAdmin: boolean }) {
-  const [l1, setL1] = useState(match.legs1 || 0);
-  const [l2, setL2] = useState(match.legs2 || 0);
-
-  return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-6"
-    >
-      <motion.div 
-        initial={{ scale: 0.9, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        className="bg-zinc-900 border border-white/10 p-8 rounded-[2.5rem] w-full max-w-md shadow-2xl"
-      >
-        <div className="flex items-center justify-between mb-8">
-          <h3 className="text-xl font-bold">
-            {isAdmin ? 'Admin: Edit Match' : 'Update Match (Best of 3)'}
-          </h3>
-          <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-            <X className="w-6 h-6 text-zinc-500" />
-          </button>
-        </div>
-
-        <div className="space-y-8">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex-1 text-center">
-              <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">{getPlayerName(match.player1Id)}</div>
-              <div className="text-[10px] text-zinc-600 mb-1">Legs Won</div>
-              <input 
-                type="number" 
-                min="0"
-                max="5"
-                value={l1}
-                onChange={(e) => setL1(Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-full bg-black border border-white/10 rounded-2xl p-6 text-4xl font-mono font-bold text-center focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-              />
-            </div>
-            <div className="text-zinc-700 font-bold">VS</div>
-            <div className="flex-1 text-center">
-              <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">{getPlayerName(match.player2Id)}</div>
-              <div className="text-[10px] text-zinc-600 mb-1">Legs Won</div>
-              <input 
-                type="number" 
-                min="0"
-                max="5"
-                value={l2}
-                onChange={(e) => setL2(Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-full bg-black border border-white/10 rounded-2xl p-6 text-4xl font-mono font-bold text-center focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <button 
-              onClick={() => onSave(match.id, l1, l2, match.player1Id)}
-              disabled={!isAdmin && l1 < 2 && l2 < 2}
-              className="py-4 bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold rounded-xl hover:bg-amber-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-30"
-            >
-              <Check className="w-5 h-5" />
-              P1 Wins
-            </button>
-            <button 
-              onClick={() => onSave(match.id, l1, l2, match.player2Id)}
-              disabled={!isAdmin && l1 < 2 && l2 < 2}
-              className="py-4 bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold rounded-xl hover:bg-amber-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-30"
-            >
-              <Check className="w-5 h-5" />
-              P2 Wins
-            </button>
-          </div>
-          {(!isAdmin && l1 < 2 && l2 < 2) && (
-            <p className="text-center text-xs text-zinc-600">A player must win 2 legs to win the match.</p>
-          )}
-          {isAdmin && (
-            <p className="text-center text-xs text-amber-500">Admin mode: You can force a winner with any score.</p>
-          )}
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
 }

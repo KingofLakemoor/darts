@@ -1,80 +1,76 @@
-export interface BracketMatch {
-  id: string;
-  p1: string | null; // Player ID
-  p2: string | null; // Player ID
-  winner: string | null;
-  score1: number;
-  score2: number;
-  nextMatchId: string | null;
-  loserToMatchId: string | null;
-  round: number;
-  type: 'WB' | 'LB' | 'GF'; // Winners, Losers, Grand Finals
-}
+import { Match, GameType, X01Config, CricketConfig } from '../types';
 
-export interface Bracket {
-  winners: BracketMatch[][];
-  losers: BracketMatch[][];
-  finals: BracketMatch | null;
-}
-
-export function generateDoubleElimination(playerIds: string[]): Bracket {
-  const n = playerIds.length;
-  const rounds = Math.ceil(Math.log2(n));
-  const totalPlayers = Math.pow(2, rounds);
+export function generateBracket(
+  participants: string[], 
+  tournamentId: string,
+  gameType: GameType,
+  gameConfig: X01Config | CricketConfig
+): Omit<Match, 'id'>[] {
+  const numPlayers = participants.length;
+  const numRounds = Math.ceil(Math.log2(numPlayers));
+  const bracketSize = Math.pow(2, numRounds);
   
-  // Fill with byes if needed
-  const participants = [...playerIds];
-  while (participants.length < totalPlayers) {
-    participants.push('BYE');
-  }
+  // Generate all matches first
+  const rounds: Omit<Match, 'id'>[][] = [];
+  let currentRoundSize = bracketSize / 2;
+  let roundNum = 1;
 
-  const winners: BracketMatch[][] = [];
-  const losers: BracketMatch[][] = [];
-
-  // Winners Bracket Round 1
-  const wbR1: BracketMatch[] = [];
-  for (let i = 0; i < totalPlayers; i += 2) {
-    wbR1.push({
-      id: `WB-R1-M${i/2 + 1}`,
-      p1: participants[i],
-      p2: participants[i+1],
-      winner: null,
-      score1: 0,
-      score2: 0,
-      nextMatchId: `WB-R2-M${Math.floor(i/4) + 1}`,
-      loserToMatchId: `LB-R1-M${Math.floor(i/4) + 1}`,
-      round: 1,
-      type: 'WB'
-    });
-  }
-  winners.push(wbR1);
-
-  // Generate subsequent WB rounds
-  for (let r = 2; r <= rounds; r++) {
-    const prevRound = winners[r-2];
-    const currentRound: BracketMatch[] = [];
-    for (let i = 0; i < prevRound.length; i += 2) {
-      currentRound.push({
-        id: `WB-R${r}-M${i/2 + 1}`,
-        p1: null,
-        p2: null,
-        winner: null,
+  while (currentRoundSize >= 1) {
+    const roundMatches: Omit<Match, 'id'>[] = [];
+    for (let i = 0; i < currentRoundSize; i++) {
+      roundMatches.push({
+        tournamentId,
+        player1Id: '',
+        player2Id: '',
         score1: 0,
         score2: 0,
-        nextMatchId: r === rounds ? 'GF' : `WB-R${r+1}-M${Math.floor(i/4) + 1}`,
-        loserToMatchId: `LB-R${(r-1)*2}-M${i/2 + 1}`, // Losers from WB move to LB
-        round: r,
-        type: 'WB'
+        legs1: 0,
+        legs2: 0,
+        status: 'pending',
+        round: roundNum,
+        position: i,
+        gameType,
+        gameConfig
       });
     }
-    winners.push(currentRound);
+    rounds.push(roundMatches);
+    currentRoundSize /= 2;
+    roundNum++;
   }
 
-  // Losers Bracket is more complex, but let's start with a simplified structure
-  // LB usually has 2x rounds of WB
-  // Round 1: Losers from WB R1
-  // Round 2: Winners of LB R1 vs Losers from WB R2
-  // ...
+  // Fill first round and handle byes
+  const shuffled = [...participants].sort(() => Math.random() - 0.5);
+  for (let i = 0; i < bracketSize / 2; i++) {
+    const p1 = shuffled[i * 2] || '';
+    const p2 = shuffled[i * 2 + 1] || '';
+    
+    rounds[0][i].player1Id = p1;
+    rounds[0][i].player2Id = p2;
 
-  return { winners, losers, finals: null };
+    if (p1 && !p2) {
+      rounds[0][i].status = 'completed';
+      rounds[0][i].winnerId = p1;
+      // Move to next round
+      if (rounds[1]) {
+        const nextPos = Math.floor(i / 2);
+        if (i % 2 === 0) rounds[1][nextPos].player1Id = p1;
+        else rounds[1][nextPos].player2Id = p1;
+      }
+    } else if (!p1 && p2) {
+      rounds[0][i].status = 'completed';
+      rounds[0][i].winnerId = p2;
+      // Move to next round
+      if (rounds[1]) {
+        const nextPos = Math.floor(i / 2);
+        if (i % 2 === 0) rounds[1][nextPos].player1Id = p2;
+        else rounds[1][nextPos].player2Id = p2;
+      }
+    } else if (p1 && p2) {
+      rounds[0][i].status = 'pending';
+    } else {
+      rounds[0][i].status = 'completed';
+    }
+  }
+
+  return rounds.flat();
 }
