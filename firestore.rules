@@ -33,6 +33,10 @@ service cloud.firestore {
     // Rules
     // ===============================================================
 
+    match /test/connection {
+      allow read: if true;
+    }
+
     match /players/{uid} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isOwner(uid) && isValidPlayer(request.resource.data);
