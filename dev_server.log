@@ -3,7 +3,8 @@
 > vite --port=3000 --host=0.0.0.0
 
 
-  VITE v6.4.1  ready in 474 ms
+  VITE v6.4.1  ready in 493 ms
 
   ➜  Local:   http://localhost:3000/
   ➜  Network: http://192.168.0.2:3000/
+4:13:41 AM [vite] (client) hmr update /src/App.tsx, /src/index.css

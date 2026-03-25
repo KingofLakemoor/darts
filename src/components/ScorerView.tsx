@@ -275,6 +275,7 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
     setCricketPoints1(lastState.cricketPoints1);
     setCricketPoints2(lastState.cricketPoints2);
     setActivePlayer(lastState.activePlayer);
+    setCurrentDarts(lastState.currentDarts || []);
     setCricketHistory(prev => prev.slice(0, -1));
   };
 
@@ -289,6 +290,7 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
       cricketPoints1,
       cricketPoints2,
       activePlayer,
+      currentDarts: [...currentDarts],
     };
     setCricketHistory(prev => [...prev, stateSnapshot]);
     const marks = activePlayer === 1 ? cricketMarks1 : cricketMarks2;
@@ -319,6 +321,14 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
     newMarks[num] = currentMarks;
     setMarks(newMarks);
     
+    const newDarts = [...currentDarts, num];
+    if (newDarts.length === 3) {
+      setCurrentDarts([]);
+      setActivePlayer(activePlayer === 1 ? 2 : 1);
+    } else {
+      setCurrentDarts(newDarts);
+    }
+
     // Check for win
     const allClosed = Object.values(newMarks).every((m: number) => m >= 3);
     const leading = cricketConfig.mode === 'Standard' 
@@ -327,6 +337,26 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
 
     if (allClosed && leading) {
       // Game over logic
+    }
+  };
+
+  const handleCricketMiss = () => {
+    const stateSnapshot = {
+      cricketMarks1: { ...cricketMarks1 },
+      cricketMarks2: { ...cricketMarks2 },
+      cricketPoints1,
+      cricketPoints2,
+      activePlayer,
+      currentDarts: [...currentDarts],
+    };
+    setCricketHistory(prev => [...prev, stateSnapshot]);
+
+    const newDarts = [...currentDarts, 0];
+    if (newDarts.length === 3) {
+      setCurrentDarts([]);
+      setActivePlayer(activePlayer === 1 ? 2 : 1);
+    } else {
+      setCurrentDarts(newDarts);
     }
   };
 
@@ -467,11 +497,11 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
                     >
                       {num === 25 ? 'B' : num}
                     </button>
-                    <div className="flex gap-1 justify-center">
+                    <div className="flex gap-2 justify-center mt-2">
                       <button 
                         onClick={() => handleCricketMark(num, 2)} 
                         className={clsx(
-                          "px-2 py-1 text-[10px] font-bold rounded-md border transition-colors",
+                          "flex-1 py-3 text-sm font-bold rounded-lg border transition-colors",
                           isSyndicate 
                             ? "bg-onyx border-syndicate-red/20 text-syndicate-red hover:text-nasty-cream" 
                             : "bg-slate-800 border-slate-700 text-slate-400 hover:text-white"
@@ -480,7 +510,7 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
                       <button 
                         onClick={() => handleCricketMark(num, 3)} 
                         className={clsx(
-                          "px-2 py-1 text-[10px] font-bold rounded-md border transition-colors",
+                          "flex-1 py-3 text-sm font-bold rounded-lg border transition-colors",
                           isSyndicate 
                             ? "bg-onyx border-syndicate-red/20 text-syndicate-red hover:text-nasty-cream" 
                             : "bg-slate-800 border-slate-700 text-slate-400 hover:text-white"
@@ -490,9 +520,21 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
                   </div>
                 ))}
                 <button
-                  onClick={() => setActivePlayer(activePlayer === 1 ? 2 : 1)}
+                  onClick={handleCricketMiss}
                   className={clsx(
-                    "col-span-4 md:col-span-7 mt-4 py-5 rounded-2xl font-bold transition-all flex items-center justify-center gap-3 shadow-xl",
+                    "col-span-4 md:col-span-7 mt-2 py-4 rounded-2xl font-bold text-xl transition-all shadow-lg",
+                    isSyndicate ? "bg-onyx border-syndicate-red/30 text-nasty-cream hover:border-syndicate-red" : "bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+                  )}
+                >
+                  MISS
+                </button>
+                <button
+                  onClick={() => {
+                    setCurrentDarts([]);
+                    setActivePlayer(activePlayer === 1 ? 2 : 1);
+                  }}
+                  className={clsx(
+                    "col-span-4 md:col-span-7 py-5 rounded-2xl font-bold transition-all flex items-center justify-center gap-3 shadow-xl",
                     isSyndicate 
                       ? "bg-syndicate-red text-nasty-cream shadow-syndicate-red/20" 
                       : "bg-indigo-600 text-white shadow-indigo-500/20 hover:bg-indigo-500"
