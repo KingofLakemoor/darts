@@ -268,6 +268,12 @@ export default function App() {
                       onClick={() => { setActiveTab('dashboard'); setIsSidebarOpen(false); }}
                       label="Venue Dashboard"
                     />
+                    <NavIcon
+                      icon={<Calculator className="w-5 h-5" />}
+                      active={activeTab === 'scorer'}
+                      onClick={() => { setActiveTab('scorer'); setIsSidebarOpen(false); }}
+                      label="Offline Scoreboard"
+                    />
                     {user && (
                       <>
                         <NavIcon
@@ -294,12 +300,6 @@ export default function App() {
                           active={activeTab === 'stats'}
                           onClick={() => { setActiveTab('stats'); setIsSidebarOpen(false); }}
                           label="Statistics"
-                        />
-                        <NavIcon
-                          icon={<Calculator className="w-5 h-5" />}
-                          active={activeTab === 'scorer'}
-                          onClick={() => { setActiveTab('scorer'); setIsSidebarOpen(false); }}
-                          label="Offline Scoreboard"
                         />
                         {(player?.role === 'admin' || player?.role === 'coordinator') && (
                           <NavIcon
