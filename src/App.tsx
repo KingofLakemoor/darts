@@ -28,6 +28,7 @@ import { TournamentView } from './components/TournamentView';
 import { PlayerView } from './components/PlayerView';
 import { StatsView } from './components/StatsView';
 import { ScorerView } from './components/ScorerView';
+import { StandaloneScorer } from './components/StandaloneScorer';
 import { SyndicateScorer } from './components/SyndicateScorer';
 import { EventDashboard } from './components/EventDashboard';
 import { ThemeProvider } from './lib/ThemeContext';
@@ -54,7 +55,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'tournaments' | 'players' | 'stats' | 'admin' | 'syndicate' | 'dashboard'>('tournaments');
+  const [activeTab, setActiveTab] = useState<'tournaments' | 'players' | 'stats' | 'admin' | 'syndicate' | 'dashboard' | 'scorer'>('tournaments');
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [activeSeason, setActiveSeason] = useState<Season | null>(null);
@@ -280,6 +281,12 @@ export default function App() {
                       onClick={() => { setActiveTab('players'); setIsSidebarOpen(false); }}
                       label="Players"
                     />
+                    <NavIcon
+                      icon={<Target className="w-5 h-5" />}
+                      active={activeTab === 'scorer'}
+                      onClick={() => { setActiveTab('scorer'); setIsSidebarOpen(false); }}
+                      label="Scoreboard"
+                    />
                     <NavIcon 
                       icon={<BarChart3 className="w-5 h-5" />} 
                       active={activeTab === 'stats'} 
@@ -392,6 +399,9 @@ export default function App() {
               )}
               {activeTab === 'stats' && (
                 <StatsView />
+              )}
+              {activeTab === 'scorer' && (
+                <StandaloneScorer />
               )}
               {activeTab === 'admin' && (player?.role === 'admin' || player?.role === 'coordinator') && (
                 <AdminPanel currentUser={player} />
