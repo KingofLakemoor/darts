@@ -4,6 +4,9 @@
     "rules": "firestore.rules"
   },
   "hosting": {
+    "predeploy": [
+      "npm ci && npm run build"
+    ],
     "public": "dist",
     "ignore": [
       "firebase.json",
