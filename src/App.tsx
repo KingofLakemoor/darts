@@ -139,6 +139,7 @@ export default function App() {
         }
       } else {
         setPlayer(null);
+        setActiveTab('dashboard');
       }
       setLoading(false);
     });
@@ -177,8 +178,12 @@ export default function App() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
+      // Ignore user cancelled error
+      if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+        alert('Sign-in failed. Please try again or check your browser settings.');
+      }
     }
   };
 
@@ -262,44 +267,42 @@ export default function App() {
                       onClick={() => { setActiveTab('dashboard'); setIsSidebarOpen(false); }}
                       label="Venue Dashboard"
                     />
-                    <NavIcon 
-                      icon={<Skull className="w-5 h-5" />} 
-                      active={activeTab === 'syndicate'} 
-                      onClick={() => { setActiveTab('syndicate'); setIsSidebarOpen(false); }}
-                      label="Syndicate Mode"
-                      variant="syndicate"
-                    />
-                    <NavIcon 
-                      icon={<Trophy className="w-5 h-5" />} 
-                      active={activeTab === 'tournaments'} 
-                      onClick={() => { setActiveTab('tournaments'); setIsSidebarOpen(false); }}
-                      label="Tournaments"
-                    />
-                    <NavIcon 
-                      icon={<Users className="w-5 h-5" />} 
-                      active={activeTab === 'players'} 
-                      onClick={() => { setActiveTab('players'); setIsSidebarOpen(false); }}
-                      label="Players"
-                    />
-                    <NavIcon
-                      icon={<Target className="w-5 h-5" />}
-                      active={activeTab === 'scorer'}
-                      onClick={() => { setActiveTab('scorer'); setIsSidebarOpen(false); }}
-                      label="Scoreboard"
-                    />
-                    <NavIcon 
-                      icon={<BarChart3 className="w-5 h-5" />} 
-                      active={activeTab === 'stats'} 
-                      onClick={() => { setActiveTab('stats'); setIsSidebarOpen(false); }}
-                      label="Statistics"
-                    />
-                    {(player?.role === 'admin' || player?.role === 'coordinator') && (
-                      <NavIcon 
-                        icon={<Settings className="w-5 h-5" />} 
-                        active={activeTab === 'admin'} 
-                        onClick={() => { setActiveTab('admin'); setIsSidebarOpen(false); }}
-                        label="Admin Panel"
-                      />
+                    {user && (
+                      <>
+                        <NavIcon
+                          icon={<Skull className="w-5 h-5" />}
+                          active={activeTab === 'syndicate'}
+                          onClick={() => { setActiveTab('syndicate'); setIsSidebarOpen(false); }}
+                          label="Syndicate Mode"
+                          variant="syndicate"
+                        />
+                        <NavIcon
+                          icon={<Trophy className="w-5 h-5" />}
+                          active={activeTab === 'tournaments'}
+                          onClick={() => { setActiveTab('tournaments'); setIsSidebarOpen(false); }}
+                          label="Tournaments"
+                        />
+                        <NavIcon
+                          icon={<Users className="w-5 h-5" />}
+                          active={activeTab === 'players'}
+                          onClick={() => { setActiveTab('players'); setIsSidebarOpen(false); }}
+                          label="Players"
+                        />
+                        <NavIcon
+                          icon={<BarChart3 className="w-5 h-5" />}
+                          active={activeTab === 'stats'}
+                          onClick={() => { setActiveTab('stats'); setIsSidebarOpen(false); }}
+                          label="Statistics"
+                        />
+                        {(player?.role === 'admin' || player?.role === 'coordinator') && (
+                          <NavIcon
+                            icon={<Settings className="w-5 h-5" />}
+                            active={activeTab === 'admin'}
+                            onClick={() => { setActiveTab('admin'); setIsSidebarOpen(false); }}
+                            label="Admin Panel"
+                          />
+                        )}
+                      </>
                     )}
                   </nav>
                 </div>
