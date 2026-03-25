@@ -20,6 +20,8 @@ export function StandaloneScorer() {
   const [score1, setScore1] = useState<number>(301);
   const [score2, setScore2] = useState<number>(301);
   const [currentDarts, setCurrentDarts] = useState<number[]>([]);
+  const [x01History, setX01History] = useState<any[]>([]);
+  const [cricketHistory, setCricketHistory] = useState<any[]>([]);
   const [modifier, setModifier] = useState<'single' | 'double' | 'triple'>('single');
   const [totalDarts1, setTotalDarts1] = useState(0);
   const [totalDarts2, setTotalDarts2] = useState(0);
@@ -39,6 +41,8 @@ export function StandaloneScorer() {
     setScore1(startScore);
     setScore2(startScore);
     setCurrentDarts([]);
+    setX01History([]);
+    setCricketHistory([]);
     setActivePlayer(1);
     setTotalDarts1(0);
     setTotalDarts2(0);
@@ -75,7 +79,17 @@ export function StandaloneScorer() {
 
     let points = value;
     if (modifier === 'double') points *= 2;
-    if (modifier === 'triple') points *= 3;
+    if (modifier === 'triple') points = value === 25 ? 50 : points * 3;
+
+    const stateSnapshot = {
+      score1,
+      score2,
+      currentDarts: [...currentDarts],
+      totalDarts1,
+      totalDarts2,
+      activePlayer,
+    };
+    setX01History(prev => [...prev, stateSnapshot]);
 
     const currentScore = activePlayer === 1 ? score1 : score2;
     const newScore = currentScore - points;
@@ -127,6 +141,16 @@ export function StandaloneScorer() {
 
   const handleCricketMark = (num: number, multiplier: number = 1) => {
     if (winner) return;
+    if (num === 25 && multiplier === 3) multiplier = 2;
+
+    const stateSnapshot = {
+      cricketMarks1: { ...cricketMarks1 },
+      cricketMarks2: { ...cricketMarks2 },
+      cricketPoints1,
+      cricketPoints2,
+      activePlayer,
+    };
+    setCricketHistory(prev => [...prev, stateSnapshot]);
 
     const marks = activePlayer === 1 ? cricketMarks1 : cricketMarks2;
     const opponentMarks = activePlayer === 1 ? cricketMarks2 : cricketMarks1;
@@ -159,12 +183,27 @@ export function StandaloneScorer() {
     }
   };
 
+  const handleUndoCricket = () => {
+    if (cricketHistory.length === 0 || winner) return;
+    const lastState = cricketHistory[cricketHistory.length - 1];
+    setCricketMarks1(lastState.cricketMarks1);
+    setCricketMarks2(lastState.cricketMarks2);
+    setCricketPoints1(lastState.cricketPoints1);
+    setCricketPoints2(lastState.cricketPoints2);
+    setActivePlayer(lastState.activePlayer);
+    setCricketHistory(prev => prev.slice(0, -1));
+  };
+
   const handleUndoX01 = () => {
-    if (currentDarts.length === 0 || winner) return;
-    const lastDart = currentDarts[currentDarts.length - 1];
-    if (activePlayer === 1) setScore1(score1 + lastDart);
-    else setScore2(score2 + lastDart);
-    setCurrentDarts(currentDarts.slice(0, -1));
+    if (x01History.length === 0 || winner) return;
+    const lastState = x01History[x01History.length - 1];
+    setScore1(lastState.score1);
+    setScore2(lastState.score2);
+    setCurrentDarts(lastState.currentDarts);
+    setTotalDarts1(lastState.totalDarts1);
+    setTotalDarts2(lastState.totalDarts2);
+    setActivePlayer(lastState.activePlayer);
+    setX01History(prev => prev.slice(0, -1));
   };
 
 
@@ -321,6 +360,16 @@ export function StandaloneScorer() {
                       >
                         <Zap className="w-5 h-5" />
                         Next Player
+                      </button>
+                      <button
+                        onClick={handleUndoCricket}
+                        className={clsx(
+                          "col-span-4 md:col-span-7 mt-2 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2",
+                          isSyndicate ? "bg-onyx border border-syndicate-red/30 text-syndicate-red hover:bg-syndicate-red/10" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                        )}
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        Undo Last Mark
                       </button>
                     </div>
                   )}
