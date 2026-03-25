@@ -152,8 +152,6 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
-
     const q = query(collection(db, 'tournaments'), orderBy('date', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tournament));
@@ -161,11 +159,9 @@ export default function App() {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, []);
 
   useEffect(() => {
-    if (!user) return;
-
     const q = query(collection(db, 'seasons'), where('active', '==', true));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       if (!snapshot.empty) {
@@ -174,7 +170,7 @@ export default function App() {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, []);
 
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
@@ -195,37 +191,6 @@ export default function App() {
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
         >
           <Target className="w-12 h-12 text-indigo-600" />
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(79,70,229,0.15),transparent_70%)]" />
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative z-10 text-center"
-        >
-          <div className="bg-indigo-600/20 p-4 rounded-3xl inline-block mb-8 backdrop-blur-xl border border-indigo-500/20">
-            <Target className="w-16 h-16 text-indigo-400" />
-          </div>
-          <h1 className="text-6xl font-bold text-white mb-4 tracking-tight">
-            Dart Club <span className="text-indigo-500">602</span>
-          </h1>
-          <p className="text-slate-400 text-xl mb-12 max-w-md mx-auto font-light leading-relaxed">
-            The official scoring and tournament management system for the elite 602 dart community.
-          </p>
-          <button
-            onClick={handleLogin}
-            className="group relative bg-white text-slate-950 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-indigo-50 transition-all duration-300 flex items-center gap-3 mx-auto shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(255,255,255,0.2)]"
-          >
-            <LogIn className="w-5 h-5" />
-            Sign in with Google
-            <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </button>
         </motion.div>
       </div>
     );
@@ -336,39 +301,56 @@ export default function App() {
                   "mt-auto p-8 border-t transition-colors duration-300",
                   theme === 'syndicate' ? "border-syndicate-red/30" : "border-slate-100"
                 )}>
-                  <div className="flex items-center gap-4 mb-6">
-                    <img 
-                      src={player?.photoURL || `https://ui-avatars.com/api/?name=${player?.name}`} 
-                      alt={player?.name}
+                  {user ? (
+                    <>
+                      <div className="flex items-center gap-4 mb-6">
+                        <img
+                          src={player?.photoURL || `https://ui-avatars.com/api/?name=${player?.name}`}
+                          alt={player?.name}
+                          className={clsx(
+                            "w-10 h-10 rounded-xl object-cover",
+                            theme === 'syndicate' ? "stitched-red" : "ring-2 ring-slate-100"
+                          )}
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className={clsx(
+                            "text-sm font-bold truncate",
+                            theme === 'syndicate' ? "text-nasty-cream font-rocker" : "text-slate-900"
+                          )}>{player?.name}</p>
+                          <p className={clsx(
+                            "text-xs capitalize",
+                            theme === 'syndicate' ? "text-steel-gray" : "text-slate-500"
+                          )}>{player?.role}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className={clsx(
+                          "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium",
+                          theme === 'syndicate'
+                            ? "text-steel-gray hover:text-syndicate-red hover:bg-onyx/50"
+                            : "text-slate-500 hover:text-red-600 hover:bg-red-50"
+                        )}
+                      >
+                        <LogOut className="w-5 h-5" />
+                        Sign Out
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={handleLogin}
                       className={clsx(
-                        "w-10 h-10 rounded-xl object-cover",
-                        theme === 'syndicate' ? "stitched-red" : "ring-2 ring-slate-100"
+                        "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium",
+                        theme === 'syndicate'
+                          ? "bg-syndicate-red/20 text-syndicate-red hover:bg-syndicate-red/30"
+                          : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
                       )}
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className={clsx(
-                        "text-sm font-bold truncate",
-                        theme === 'syndicate' ? "text-nasty-cream font-rocker" : "text-slate-900"
-                      )}>{player?.name}</p>
-                      <p className={clsx(
-                        "text-xs capitalize",
-                        theme === 'syndicate' ? "text-steel-gray" : "text-slate-500"
-                      )}>{player?.role}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className={clsx(
-                      "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium",
-                      theme === 'syndicate' 
-                        ? "text-steel-gray hover:text-syndicate-red hover:bg-onyx/50" 
-                        : "text-slate-500 hover:text-red-600 hover:bg-red-50"
-                    )}
-                  >
-                    <LogOut className="w-5 h-5" />
-                    Sign Out
-                  </button>
+                    >
+                      <LogIn className="w-5 h-5" />
+                      Sign In
+                    </button>
+                  )}
                 </div>
               </motion.aside>
             )}

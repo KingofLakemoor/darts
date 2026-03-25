@@ -34,29 +34,29 @@ service cloud.firestore {
     // ===============================================================
 
     match /players/{uid} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow create: if isAuthenticated() && isOwner(uid) && isValidPlayer(request.resource.data);
       allow update: if isAuthenticated() && (isOwner(uid) || isAdmin()) && isValidPlayer(request.resource.data);
     }
 
     match /tournaments/{tournamentId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow create, update: if isAdmin() && isValidTournament(request.resource.data);
       allow delete: if isAdmin();
 
       match /matches/{matchId} {
-        allow read: if isAuthenticated();
+        allow read: if true;
         allow create, update: if isAdmin();
       }
     }
 
     match /venues/{venueId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     match /seasons/{seasonId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if isAdmin();
     }
   }
