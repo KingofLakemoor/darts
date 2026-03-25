@@ -46,7 +46,8 @@ import {
   Zap,
   Monitor,
   Menu,
-  X
+  X,
+  Calculator
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { clsx } from 'clsx';
@@ -293,6 +294,12 @@ export default function App() {
                           active={activeTab === 'stats'}
                           onClick={() => { setActiveTab('stats'); setIsSidebarOpen(false); }}
                           label="Statistics"
+                        />
+                        <NavIcon
+                          icon={<Calculator className="w-5 h-5" />}
+                          active={activeTab === 'scorer'}
+                          onClick={() => { setActiveTab('scorer'); setIsSidebarOpen(false); }}
+                          label="Offline Scoreboard"
                         />
                         {(player?.role === 'admin' || player?.role === 'coordinator') && (
                           <NavIcon
