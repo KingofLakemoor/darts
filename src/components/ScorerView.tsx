@@ -17,7 +17,7 @@ interface Props {
 }
 
 export function ScorerView({ match, tournamentId, player1, player2, onClose, isSyndicateTournament }: Props) {
-  const { isSyndicate: globalIsSyndicate } = useTheme();
+  const { isSyndicate: globalIsSyndicate, isDark } = useTheme();
   const isSyndicate = isSyndicateTournament || globalIsSyndicate;
   const [saving, setSaving] = useState(false);
   const [activePlayer, setActivePlayer] = useState<1 | 2>(1);
@@ -366,12 +366,12 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
       animate={{ opacity: 1 }}
       className={clsx(
         "relative w-full h-full flex items-center justify-center p-0",
-        isSyndicate ? "leather-bg" : "bg-slate-950/95 backdrop-blur-xl md:rounded-[3rem]"
+        isSyndicate ? "leather-bg" : isDark ? "bg-slate-950/95 backdrop-blur-xl md:rounded-[3rem]" : "bg-slate-950/95 backdrop-blur-xl md:rounded-[3rem]"
       )}
     >
       <div className={clsx(
         "w-full h-full md:h-auto md:max-w-6xl overflow-hidden shadow-2xl flex flex-col",
-        isSyndicate ? "merrowed-border leather-bg border-syndicate-red" : "bg-slate-900 md:rounded-[3rem] border border-slate-800"
+        isSyndicate ? "merrowed-border leather-bg border-syndicate-red" : isDark ? "bg-slate-900 md:rounded-[3rem] border border-slate-800" : "bg-slate-900 md:rounded-[3rem] border border-slate-800"
       )}>
         {/* Syndicate Vault Progress */}
         {isSyndicate && (
@@ -395,7 +395,7 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
         {/* Header */}
         <div className={clsx(
           "p-4 border-b flex items-center justify-between text-xs font-bold uppercase tracking-widest",
-          isSyndicate ? "border-syndicate-red/30 bg-onyx text-steel-gray" : "border-slate-800 bg-slate-900 text-slate-400"
+          isSyndicate ? "border-syndicate-red/30 bg-onyx text-steel-gray" : isDark ? "border-slate-800 bg-slate-900 text-slate-400" : "border-slate-800 bg-slate-900 text-slate-400"
         )}>
           <div className="flex-1">
             {match.gameType === 'X01' ? getCheckoutSuggestion(activePlayer === 1 ? score1 : score2, 3 - currentDarts.length) : "Good luck!"}
@@ -605,7 +605,7 @@ function PlayerScore({ player, score, legs, sets, isActive, marks, isShaking, da
   darts?: number[],
   roundTotal?: number
 }) {
-  const { isSyndicate } = useTheme();
+  const { isSyndicate, isDark } = useTheme();
 
   return (
     <motion.div 
@@ -735,7 +735,7 @@ function PlayerScore({ player, score, legs, sets, isActive, marks, isShaking, da
 }
 
 function KeyButton({ children, onClick, className = '' }: { children: React.ReactNode, onClick: () => void, className?: string }) {
-  const { isSyndicate } = useTheme();
+  const { isSyndicate, isDark } = useTheme();
 
   return (
     <button
@@ -744,7 +744,7 @@ function KeyButton({ children, onClick, className = '' }: { children: React.Reac
         "h-16 rounded-2xl border text-2xl font-bold transition-all active:scale-95 shadow-lg",
         isSyndicate 
           ? "bg-onyx border-syndicate-red/30 text-nasty-cream hover:border-syndicate-red font-rocker" 
-          : "bg-slate-800 border-slate-700 text-white hover:bg-slate-700",
+          : isDark ? "bg-slate-800 border-slate-700 text-white hover:bg-slate-700" : "bg-slate-800 border-slate-700 text-white hover:bg-slate-700",
         className
       )}
     >

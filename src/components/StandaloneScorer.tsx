@@ -8,7 +8,7 @@ type GameMode = 'X01' | 'Cricket';
 type X01StartScore = 301 | 501 | 701;
 
 export function StandaloneScorer() {
-  const { isSyndicate } = useTheme();
+  const { isSyndicate, isDark } = useTheme();
   const [isPlaying, setIsPlaying] = useState(false);
   const [gameMode, setGameMode] = useState<GameMode>('X01');
   const [startScore, setStartScore] = useState<X01StartScore>(301);
@@ -243,16 +243,16 @@ export function StandaloneScorer() {
     return (
       <div className={clsx(
         "relative w-full h-full flex items-center justify-center p-0",
-        isSyndicate ? "leather-bg" : "bg-slate-950/95 md:rounded-[3rem]"
+        isSyndicate ? "leather-bg" : isDark ? "bg-slate-950/95 md:rounded-[3rem]" : "bg-slate-950/95 md:rounded-[3rem]"
       )}>
         <div className={clsx(
           "w-full h-full md:h-auto md:max-w-6xl overflow-hidden shadow-2xl flex flex-col",
-          isSyndicate ? "merrowed-border leather-bg border-syndicate-red" : "bg-slate-900 md:rounded-[3rem] border border-slate-800"
+          isSyndicate ? "merrowed-border leather-bg border-syndicate-red" : isDark ? "bg-slate-900 md:rounded-[3rem] border border-slate-800" : "bg-slate-900 md:rounded-[3rem] border border-slate-800"
         )}>
           {/* Header */}
           <div className={clsx(
             "p-4 border-b flex items-center justify-between text-xs font-bold uppercase tracking-widest",
-            isSyndicate ? "border-syndicate-red/30 bg-onyx text-steel-gray" : "border-slate-800 bg-slate-900 text-slate-400"
+            isSyndicate ? "border-syndicate-red/30 bg-onyx text-steel-gray" : isDark ? "border-slate-800 bg-slate-900 text-slate-400" : "border-slate-800 bg-slate-900 text-slate-400"
           )}>
             <div className="flex items-center gap-4">
                <button
@@ -431,17 +431,17 @@ export function StandaloneScorer() {
       <header className="mb-8">
         <h1 className={clsx(
           "text-5xl font-bold tracking-tight mb-2 flex items-center gap-4",
-          isSyndicate ? "text-nasty-cream font-rocker" : "text-slate-900"
+          isSyndicate ? "text-nasty-cream font-rocker" : isDark ? "text-slate-50" : "text-slate-900"
         )}>
           <Target className={clsx(
             "w-10 h-10",
-            isSyndicate ? "text-syndicate-red" : "text-indigo-600"
+            isSyndicate ? "text-syndicate-red" : isDark ? "text-indigo-400" : "text-indigo-600"
           )} />
           Scoreboard
         </h1>
         <p className={clsx(
           "text-lg",
-          isSyndicate ? "text-steel-gray" : "text-slate-500"
+          isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-500"
         )}>
           Practice and track scores for casual games. No stats are recorded.
         </p>
@@ -449,13 +449,13 @@ export function StandaloneScorer() {
 
       <div className={clsx(
         "p-8 rounded-[2.5rem] border shadow-xl",
-        isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : "bg-white border-slate-200"
+        isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
       )}>
         <div className="flex items-center gap-3 mb-8">
-          <Settings2 className={clsx("w-6 h-6", isSyndicate ? "text-syndicate-red" : "text-indigo-600")} />
+          <Settings2 className={clsx("w-6 h-6", isSyndicate ? "text-syndicate-red" : isDark ? "text-indigo-400" : "text-indigo-600")} />
           <h2 className={clsx(
             "text-2xl font-bold",
-            isSyndicate ? "text-nasty-cream" : "text-slate-900"
+            isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900"
           )}>Game Setup</h2>
         </div>
 
@@ -464,7 +464,7 @@ export function StandaloneScorer() {
           <div>
             <label className={clsx(
               "block text-sm font-bold mb-4 uppercase tracking-wider",
-              isSyndicate ? "text-nasty-cream/60" : "text-slate-500"
+              isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-500"
             )}>Select Game</label>
             <div className="grid grid-cols-2 gap-4">
               {(['X01', 'Cricket'] as const).map(mode => (
@@ -474,8 +474,8 @@ export function StandaloneScorer() {
                   className={clsx(
                     "py-4 rounded-2xl font-bold text-lg transition-all border-2",
                     gameMode === mode
-                      ? (isSyndicate ? "bg-syndicate-red/20 border-syndicate-red text-syndicate-red" : "bg-indigo-50 border-indigo-600 text-indigo-700")
-                      : (isSyndicate ? "bg-black/40 border-syndicate-red/10 text-nasty-cream/40" : "bg-white border-slate-200 text-slate-500 hover:border-indigo-200")
+                      ? (isSyndicate ? "bg-syndicate-red/20 border-syndicate-red text-syndicate-red" : isDark ? "bg-indigo-500/20 border-indigo-500 text-indigo-400" : "bg-indigo-50 border-indigo-600 text-indigo-700")
+                      : (isSyndicate ? "bg-black/40 border-syndicate-red/10 text-nasty-cream/40" : isDark ? "bg-slate-800 border-slate-700 text-slate-400 hover:border-indigo-500/50" : "bg-white border-slate-200 text-slate-500 hover:border-indigo-200")
                   )}
                 >
                   {mode}
@@ -496,7 +496,7 @@ export function StandaloneScorer() {
                 <div className="pt-4">
                   <label className={clsx(
                     "block text-sm font-bold mb-4 uppercase tracking-wider",
-                    isSyndicate ? "text-nasty-cream/60" : "text-slate-500"
+                    isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-500"
                   )}>Start Score</label>
                   <div className="grid grid-cols-3 gap-4">
                     {([301, 501, 701] as const).map(score => (
@@ -506,8 +506,8 @@ export function StandaloneScorer() {
                         className={clsx(
                           "py-3 rounded-xl font-bold transition-all border",
                           startScore === score
-                            ? (isSyndicate ? "bg-syndicate-red/20 border-syndicate-red text-syndicate-red" : "bg-indigo-50 border-indigo-600 text-indigo-700")
-                            : (isSyndicate ? "bg-black/40 border-syndicate-red/10 text-nasty-cream/40" : "bg-white border-slate-200 text-slate-500 hover:border-indigo-200")
+                            ? (isSyndicate ? "bg-syndicate-red/20 border-syndicate-red text-syndicate-red" : isDark ? "bg-indigo-500/20 border-indigo-500 text-indigo-400" : "bg-indigo-50 border-indigo-600 text-indigo-700")
+                            : (isSyndicate ? "bg-black/40 border-syndicate-red/10 text-nasty-cream/40" : isDark ? "bg-slate-800 border-slate-700 text-slate-400 hover:border-indigo-500/50" : "bg-white border-slate-200 text-slate-500 hover:border-indigo-200")
                         )}
                       >
                         {score}
@@ -520,10 +520,10 @@ export function StandaloneScorer() {
           </AnimatePresence>
 
           {/* Players */}
-          <div className="pt-4 border-t border-slate-100">
+          <div className={clsx("pt-4 border-t", isDark ? "border-slate-800" : "border-slate-100")}>
              <label className={clsx(
                 "block text-sm font-bold mb-4 uppercase tracking-wider",
-                isSyndicate ? "text-nasty-cream/60" : "text-slate-500"
+                isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-500"
               )}>Players</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -534,7 +534,7 @@ export function StandaloneScorer() {
                     placeholder="Player 1 Name"
                     className={clsx(
                       "w-full px-4 py-3 rounded-xl border-2 outline-none transition-all font-bold text-lg",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream focus:border-syndicate-red" : "bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-900"
+                      isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream focus:border-syndicate-red" : isDark ? "bg-slate-800 border-slate-700 focus:border-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-900"
                     )}
                   />
                 </div>
@@ -546,7 +546,7 @@ export function StandaloneScorer() {
                     placeholder="Player 2 Name"
                     className={clsx(
                       "w-full px-4 py-3 rounded-xl border-2 outline-none transition-all font-bold text-lg",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream focus:border-syndicate-red" : "bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-900"
+                      isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream focus:border-syndicate-red" : isDark ? "bg-slate-800 border-slate-700 focus:border-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:border-indigo-500 text-slate-900"
                     )}
                   />
                 </div>

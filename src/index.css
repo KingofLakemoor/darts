@@ -21,12 +21,20 @@
   --color-bounty-gold: #D4AF37;
 }
 
-/* Default "Clean" Theme */
+/* Default "Light" Theme */
 :root {
   --bg-primary: #f8fafc; /* slate-50 */
   --text-primary: #0f172a; /* slate-900 */
   --accent-primary: #4f46e5; /* indigo-600 */
   --border-primary: #e2e8f0; /* slate-200 */
+}
+
+/* Dark Theme */
+.theme-dark {
+  --bg-primary: #0f172a; /* slate-900 */
+  --text-primary: #f8fafc; /* slate-50 */
+  --accent-primary: #6366f1; /* indigo-500 */
+  --border-primary: #334155; /* slate-700 */
 }
 
 /* Syndicate Theme */
@@ -50,6 +58,7 @@ body {
   @apply prose max-w-none;
 }
 
+.theme-dark .markdown-body,
 .theme-syndicate .markdown-body {
   @apply prose-invert;
 }

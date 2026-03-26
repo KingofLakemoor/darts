@@ -1,10 +1,12 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 
-type Theme = 'clean' | 'syndicate';
+type Theme = 'light' | 'dark' | 'syndicate';
 
 interface ThemeContextType {
   theme: Theme;
   isSyndicate: boolean;
+  isDark: boolean;
+  isLight: boolean;
   setTheme: (theme: Theme) => void;
 }
 
@@ -13,10 +15,12 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
     const saved = localStorage.getItem('theme') as Theme;
-    return saved || 'syndicate';
+    return saved || 'dark';
   });
 
   const isSyndicate = theme === 'syndicate';
+  const isDark = theme === 'dark';
+  const isLight = theme === 'light';
 
   useEffect(() => {
     localStorage.setItem('theme', theme);
@@ -27,7 +31,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, isSyndicate, setTheme }}>
+    <ThemeContext.Provider value={{ theme, isSyndicate, isDark, isLight, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );

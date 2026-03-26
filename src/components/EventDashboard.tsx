@@ -16,7 +16,7 @@ import { clsx } from 'clsx';
 import { format } from 'date-fns';
 
 export function EventDashboard() {
-  const { isSyndicate } = useTheme();
+  const { isSyndicate, isDark } = useTheme();
   const [liveMatches, setLiveMatches] = useState<Match[]>([]);
   const [liveTournament, setLiveTournament] = useState<Tournament | null>(null);
   const [recentResults, setRecentResults] = useState<Match[]>([]);
@@ -85,23 +85,23 @@ export function EventDashboard() {
   return (
     <div className={clsx(
       "flex flex-col gap-8",
-      isSyndicate ? "text-nasty-cream" : "text-slate-900"
+      isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900"
     )}>
       {/* Header */}
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-6">
           <div className={clsx(
             "p-4 rounded-2xl shadow-xl",
-            isSyndicate ? "bg-syndicate-red" : "bg-indigo-600"
+            isSyndicate ? "bg-syndicate-red" : isDark ? "bg-indigo-500" : "bg-indigo-600"
           )}>
             <Target className="w-10 h-10 text-white" />
           </div>
           <div>
             <h1 className={clsx(
               "text-4xl font-black tracking-tighter uppercase",
-              isSyndicate ? "font-rocker text-nasty-cream" : "text-slate-900"
+              isSyndicate ? "font-rocker text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900"
             )}>
-              Dart Club <span className={isSyndicate ? "text-syndicate-red" : "text-indigo-600"}>602</span>
+              Dart Club <span className={isSyndicate ? "text-syndicate-red" : isDark ? "text-indigo-400" : "text-indigo-600"}>602</span>
             </h1>
             <p className={clsx(
               "text-lg font-bold opacity-60",
@@ -115,7 +115,7 @@ export function EventDashboard() {
         <div className="flex items-center gap-4">
           <div className={clsx(
             "px-6 py-3 rounded-2xl border flex items-center gap-3",
-            isSyndicate ? "bg-black/40 border-syndicate-red/30" : "bg-white border-slate-200 shadow-sm"
+            isSyndicate ? "bg-black/40 border-syndicate-red/30" : isDark ? "bg-slate-900 border-slate-800 shadow-sm" : "bg-white border-slate-200 shadow-sm"
           )}>
             <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
             <span className="font-black uppercase tracking-widest text-xs">Venue Live Feed</span>
@@ -132,7 +132,7 @@ export function EventDashboard() {
           {/* Live Matches Section */}
           <section className="space-y-4">
             <div className="flex items-center gap-3 mb-2">
-              <Zap className={clsx("w-6 h-6", isSyndicate ? "text-syndicate-red" : "text-indigo-600")} />
+              <Zap className={clsx("w-6 h-6", isSyndicate ? "text-syndicate-red" : isDark ? "text-indigo-400" : "text-indigo-600")} />
               <h2 className="text-xl font-black uppercase tracking-widest">Live Matches</h2>
             </div>
             
@@ -150,7 +150,7 @@ export function EventDashboard() {
                 ) : (
                   <div className={clsx(
                     "col-span-2 p-12 rounded-[2rem] border border-dashed flex flex-col items-center justify-center text-center",
-                    isSyndicate ? "border-syndicate-red/20 bg-black/20" : "border-slate-200 bg-white"
+                    isSyndicate ? "border-syndicate-red/20 bg-black/20" : isDark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-white"
                   )}>
                     <Clock className="w-12 h-12 mb-4 opacity-20" />
                     <p className="text-lg font-bold opacity-40">Waiting for next matches to start...</p>
@@ -164,13 +164,13 @@ export function EventDashboard() {
           {liveTournament && (
             <section className={clsx(
               "p-8 rounded-[2.5rem] border relative overflow-hidden",
-              isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : "bg-white border-slate-200 shadow-xl"
+              isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : isDark ? "bg-slate-900 border-slate-800 shadow-xl" : "bg-white border-slate-200 shadow-xl"
             )}>
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
                   <div className={clsx(
                     "p-3 rounded-xl",
-                    isSyndicate ? "bg-syndicate-red/20 text-syndicate-red" : "bg-indigo-100 text-indigo-600"
+                    isSyndicate ? "bg-syndicate-red/20 text-syndicate-red" : isDark ? "bg-indigo-500/20 text-indigo-400" : "bg-indigo-100 text-indigo-600"
                   )}>
                     <Trophy className="w-6 h-6" />
                   </div>
@@ -181,7 +181,7 @@ export function EventDashboard() {
                 </div>
                 <div className={clsx(
                   "px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest",
-                  isSyndicate ? "bg-syndicate-red text-white" : "bg-indigo-600 text-white"
+                  isSyndicate ? "bg-syndicate-red text-white" : isDark ? "bg-indigo-500 text-white" : "bg-indigo-600 text-white"
                 )}>
                   Tournament in Progress
                 </div>
@@ -211,10 +211,10 @@ export function EventDashboard() {
           {/* Season Leaderboard */}
           <section className={clsx(
             "p-8 rounded-[2.5rem] border",
-            isSyndicate ? "bg-black/40 border-syndicate-red/20" : "bg-white border-slate-200 shadow-lg"
+            isSyndicate ? "bg-black/40 border-syndicate-red/20" : isDark ? "bg-slate-900 border-slate-800 shadow-lg" : "bg-white border-slate-200 shadow-lg"
           )}>
             <div className="flex items-center gap-3 mb-6">
-              <Users className={clsx("w-5 h-5", isSyndicate ? "text-syndicate-red" : "text-indigo-600")} />
+              <Users className={clsx("w-5 h-5", isSyndicate ? "text-syndicate-red" : isDark ? "text-indigo-400" : "text-indigo-600")} />
               <h2 className="text-lg font-black uppercase tracking-widest">Season Leaders</h2>
             </div>
             
@@ -253,10 +253,10 @@ export function EventDashboard() {
           {/* Recent Results */}
           <section className={clsx(
             "p-8 rounded-[2.5rem] border",
-            isSyndicate ? "bg-onyx border-syndicate-red/30" : "bg-slate-900 text-white border-slate-800 shadow-xl"
+            isSyndicate ? "bg-onyx border-syndicate-red/30" : isDark ? "bg-slate-900 text-white border-slate-800 shadow-xl" : "bg-slate-900 text-white border-slate-800 shadow-xl"
           )}>
             <div className="flex items-center gap-3 mb-6">
-              <Clock className={clsx("w-5 h-5", isSyndicate ? "text-syndicate-red" : "text-indigo-400")} />
+              <Clock className={clsx("w-5 h-5", isSyndicate ? "text-syndicate-red" : isDark ? "text-indigo-400" : "text-indigo-400")} />
               <h2 className="text-lg font-black uppercase tracking-widest">Recent Results</h2>
             </div>
 
@@ -298,6 +298,7 @@ export function EventDashboard() {
 function LiveMatchCard({ match, players, isSyndicate }: { match: Match, players: Record<string, Player>, isSyndicate: boolean }) {
   const p1 = players[match.player1Id];
   const p2 = players[match.player2Id];
+  const { isDark } = useTheme();
 
   return (
     <motion.div
@@ -309,7 +310,7 @@ function LiveMatchCard({ match, players, isSyndicate }: { match: Match, players:
         "p-8 rounded-[2.5rem] border relative overflow-hidden group",
         isSyndicate 
           ? "bg-onyx border-syndicate-red/30 merrowed-border" 
-          : "bg-white border-slate-200 shadow-xl"
+          : isDark ? "bg-slate-900 border-slate-800 shadow-xl" : "bg-white border-slate-200 shadow-xl"
       )}
     >
       {/* Live Pulse */}
@@ -339,7 +340,7 @@ function LiveMatchCard({ match, players, isSyndicate }: { match: Match, players:
           </div>
           <div className={clsx(
             "text-5xl font-black tabular-nums",
-            isSyndicate ? "text-syndicate-red" : "text-indigo-600"
+            isSyndicate ? "text-syndicate-red" : isDark ? "text-indigo-400" : "text-indigo-600"
           )}>
             {match.score1}
           </div>
@@ -348,12 +349,12 @@ function LiveMatchCard({ match, players, isSyndicate }: { match: Match, players:
         <div className="flex items-center gap-4">
           <div className={clsx(
             "h-px flex-1",
-            isSyndicate ? "bg-syndicate-red/20" : "bg-slate-100"
+            isSyndicate ? "bg-syndicate-red/20" : isDark ? "bg-slate-800" : "bg-slate-100"
           )} />
           <span className="text-xs font-black uppercase tracking-widest opacity-20">Match Point</span>
           <div className={clsx(
             "h-px flex-1",
-            isSyndicate ? "bg-syndicate-red/20" : "bg-slate-100"
+            isSyndicate ? "bg-syndicate-red/20" : isDark ? "bg-slate-800" : "bg-slate-100"
           )} />
         </div>
 
@@ -374,7 +375,7 @@ function LiveMatchCard({ match, players, isSyndicate }: { match: Match, players:
           </div>
           <div className={clsx(
             "text-5xl font-black tabular-nums",
-            isSyndicate ? "text-syndicate-red" : "text-indigo-600"
+            isSyndicate ? "text-syndicate-red" : isDark ? "text-indigo-400" : "text-indigo-600"
           )}>
             {match.score2}
           </div>
@@ -382,11 +383,11 @@ function LiveMatchCard({ match, players, isSyndicate }: { match: Match, players:
       </div>
 
       {/* Progress Bar */}
-      <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-100">
+      <div className={clsx("absolute bottom-0 left-0 w-full h-1", isDark ? "bg-slate-800" : "bg-slate-100")}>
         <motion.div 
           className={clsx(
             "h-full",
-            isSyndicate ? "bg-syndicate-red" : "bg-indigo-600"
+            isSyndicate ? "bg-syndicate-red" : isDark ? "bg-indigo-500" : "bg-indigo-600"
           )}
           initial={{ width: "0%" }}
           animate={{ width: "100%" }}

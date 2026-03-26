@@ -7,3 +7,14 @@
 
   ➜  Local:   http://localhost:3000/
   ➜  Network: http://192.168.0.2:3000/
+2:13:10 AM [vite] (client) hmr update /src/lib/ThemeContext.tsx, /src/index.css
+2:13:30 AM [vite] (client) hmr update /src/index.css
+2:14:27 AM [vite] (client) hmr update /src/App.tsx, /src/index.css
+2:15:10 AM [vite] (client) hmr update /src/components/PlayerView.tsx, /src/index.css
+2:15:52 AM [vite] (client) hmr update /src/components/TournamentView.tsx, /src/index.css
+2:16:52 AM [vite] (client) hmr update /src/components/StandaloneScorer.tsx, /src/index.css
+2:17:44 AM [vite] (client) hmr update /src/components/StatsView.tsx, /src/index.css
+2:19:13 AM [vite] (client) hmr update /src/components/AdminPanel.tsx, /src/index.css
+2:21:32 AM [vite] (client) hmr update /src/components/ScorerView.tsx, /src/index.css
+2:22:22 AM [vite] (client) hmr update /src/components/EventDashboard.tsx, /src/index.css
+2:23:11 AM [vite] (client) hmr update /src/components/BracketView.tsx, /src/index.css
