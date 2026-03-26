@@ -64,20 +64,13 @@ function AppContent() {
   const [activeSeason, setActiveSeason] = useState<Season | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const { theme, setTheme, isSyndicate, isDark, isLight } = useTheme();
+  const { theme, toggleTheme, isSyndicate, isDark, isLight } = useTheme();
 
   useEffect(() => {
     // Apply theme class to body
     document.body.classList.remove('theme-syndicate', 'theme-dark', 'theme-light');
     document.body.classList.add(`theme-${theme}`);
   }, [theme]);
-
-  // Automatically switch theme when entering Syndicate Mode tab
-  useEffect(() => {
-    if (activeTab === 'syndicate') {
-      setTheme('syndicate');
-    }
-  }, [activeTab, setTheme]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -325,16 +318,17 @@ function AppContent() {
                       Theme
                     </span>
                     <button
-                      onClick={() => setTheme(isLight ? 'dark' : isDark ? 'syndicate' : 'light')}
+                      onClick={toggleTheme}
+                      disabled={isSyndicate}
                       className={clsx(
-                        "p-2 rounded-xl transition-all duration-200",
-                        isSyndicate ? "bg-onyx/50 text-syndicate-red hover:text-nasty-cream hover:bg-onyx" :
+                        "p-2 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
+                        isSyndicate ? "bg-onyx/50 text-syndicate-red" :
                         isDark ? "bg-slate-800 text-slate-300 hover:bg-slate-700" :
                         "bg-slate-100 text-slate-600 hover:bg-slate-200"
                       )}
-                      title={`Switch to ${isLight ? 'Dark' : isDark ? 'Syndicate' : 'Light'} Mode`}
+                      title={isSyndicate ? "Theme locked in Syndicate Mode" : `Switch to ${isLight ? 'Dark' : 'Light'} Mode`}
                     >
-                      {isLight ? <Moon className="w-5 h-5" /> : isDark ? <Skull className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                      {isSyndicate ? <Skull className="w-5 h-5" /> : isLight ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
                     </button>
                   </div>
 

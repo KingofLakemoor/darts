@@ -6,6 +6,7 @@ import { motion } from 'motion/react';
 import { BracketView } from './BracketView';
 import { useTheme } from '../lib/ThemeContext';
 import { clsx } from 'clsx';
+import { useEffect } from 'react';
 
 interface Props {
   tournaments: Tournament[];
@@ -15,7 +16,17 @@ interface Props {
 
 export function TournamentView({ tournaments, season, venues }: Props) {
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
-  const { isSyndicate, isDark } = useTheme();
+  const { isSyndicate, isDark, setSyndicateMode } = useTheme();
+
+  useEffect(() => {
+    if (selectedTournament?.isSyndicate) {
+      setSyndicateMode(true);
+    } else {
+      setSyndicateMode(false);
+    }
+
+    return () => setSyndicateMode(false);
+  }, [selectedTournament, setSyndicateMode]);
 
   if (selectedTournament) {
     return (

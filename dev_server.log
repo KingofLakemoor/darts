@@ -18,3 +18,7 @@
 2:21:32 AM [vite] (client) hmr update /src/components/ScorerView.tsx, /src/index.css
 2:22:22 AM [vite] (client) hmr update /src/components/EventDashboard.tsx, /src/index.css
 2:23:11 AM [vite] (client) hmr update /src/components/BracketView.tsx, /src/index.css
+2:38:42 AM [vite] (client) hmr update /src/lib/ThemeContext.tsx, /src/index.css
+2:40:22 AM [vite] (client) hmr update /src/App.tsx, /src/index.css
+2:41:26 AM [vite] (client) hmr update /src/components/SyndicateScorer.tsx, /src/index.css
+2:41:52 AM [vite] (client) hmr update /src/components/TournamentView.tsx, /src/index.css
