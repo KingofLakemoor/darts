@@ -47,12 +47,14 @@ import {
   Monitor,
   Menu,
   X,
-  Calculator
+  Calculator,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { clsx } from 'clsx';
 
-export default function App() {
+function AppContent() {
   const [user, setUser] = useState<User | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,8 +62,9 @@ export default function App() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [activeSeason, setActiveSeason] = useState<Season | null>(null);
-  const [theme, setTheme] = useState<'clean' | 'syndicate'>('clean');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     // Apply theme class to body
@@ -76,10 +79,8 @@ export default function App() {
   useEffect(() => {
     if (activeTab === 'syndicate') {
       setTheme('syndicate');
-    } else {
-      setTheme('clean');
     }
-  }, [activeTab]);
+  }, [activeTab, setTheme]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -192,25 +193,23 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className={clsx("min-h-screen flex items-center justify-center", theme === 'syndicate' ? "bg-onyx" : "bg-slate-50")}>
         <motion.div 
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
         >
-          <Target className="w-12 h-12 text-indigo-600" />
+          <Target className={clsx("w-12 h-12", theme === 'syndicate' ? "text-syndicate-red" : "text-indigo-600")} />
         </motion.div>
       </div>
     );
   }
 
   return (
-    <ErrorBoundary>
-      <ThemeProvider theme={theme}>
-        <div className={clsx(
-          "min-h-screen flex flex-col transition-colors duration-300 relative",
-          theme === 'syndicate' ? "bg-onyx text-nasty-cream" : "bg-slate-50 text-slate-900"
-        )}>
-          {/* Sidebar Overlay */}
+    <div className={clsx(
+      "min-h-screen flex flex-col transition-colors duration-300 relative",
+      theme === 'syndicate' ? "bg-onyx text-nasty-cream" : "bg-slate-50 text-slate-900"
+    )}>
+      {/* Sidebar Overlay */}
           <AnimatePresence>
             {isSidebarOpen && (
               <motion.div
@@ -318,6 +317,24 @@ export default function App() {
                   "mt-auto p-8 border-t transition-colors duration-300",
                   theme === 'syndicate' ? "border-syndicate-red/30" : "border-slate-100"
                 )}>
+                  <div className="mb-6 flex items-center justify-between">
+                    <span className={clsx("text-sm font-medium", theme === 'syndicate' ? "text-steel-gray" : "text-slate-500")}>
+                      Theme
+                    </span>
+                    <button
+                      onClick={() => setTheme(theme === 'syndicate' ? 'clean' : 'syndicate')}
+                      className={clsx(
+                        "p-2 rounded-xl transition-all duration-200",
+                        theme === 'syndicate'
+                          ? "bg-onyx/50 text-nasty-cream hover:text-syndicate-red hover:bg-onyx"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      )}
+                      title={`Switch to ${theme === 'syndicate' ? 'Light' : 'Dark'} Mode`}
+                    >
+                      {theme === 'syndicate' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                    </button>
+                  </div>
+
                   {user ? (
                     <>
                       <div className="flex items-center gap-4 mb-6">
@@ -419,7 +436,15 @@ export default function App() {
             </motion.div>
           </AnimatePresence>
         </main>
-      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AppContent />
       </ThemeProvider>
     </ErrorBoundary>
   );

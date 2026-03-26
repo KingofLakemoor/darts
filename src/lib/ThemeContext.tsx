@@ -1,19 +1,33 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 
 type Theme = 'clean' | 'syndicate';
 
 interface ThemeContextType {
   theme: Theme;
   isSyndicate: boolean;
+  setTheme: (theme: Theme) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ theme, children }: { theme: Theme, children: ReactNode }) {
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [theme, setThemeState] = useState<Theme>(() => {
+    const saved = localStorage.getItem('theme') as Theme;
+    return saved || 'syndicate';
+  });
+
   const isSyndicate = theme === 'syndicate';
+
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+  }, [theme]);
   
+  const setTheme = (newTheme: Theme) => {
+    setThemeState(newTheme);
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, isSyndicate }}>
+    <ThemeContext.Provider value={{ theme, isSyndicate, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );
