@@ -731,18 +731,18 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
         {/* Tournament Management */}
         <section className={clsx(
           "p-8 rounded-3xl border shadow-sm",
-          isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : "bg-white border-slate-200"
+          isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
         )}>
           <div className="flex items-center gap-3 mb-8">
             <div className={clsx(
               "p-2 rounded-xl",
-              isSyndicate ? "bg-syndicate-red/20 text-syndicate-red" : "bg-indigo-100 text-indigo-600"
+              isSyndicate ? "bg-syndicate-red/20 text-syndicate-red" : isDark ? "bg-indigo-500/20 text-indigo-400" : "bg-indigo-100 text-indigo-600"
             )}>
               <Settings2 className="w-6 h-6" />
             </div>
             <h2 className={clsx(
               "text-xl font-bold",
-              isSyndicate ? "text-nasty-cream" : "text-slate-900"
+              isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900"
             )}>
               Manage Tournaments
             </h2>
@@ -752,7 +752,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
             {tournaments.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(t => (
               <div key={t.id} className={clsx(
                 "flex items-center justify-between p-4 rounded-2xl border",
-                isSyndicate ? "bg-black/20 border-syndicate-red/10" : "bg-slate-50 border-slate-100"
+                isSyndicate ? "bg-black/20 border-syndicate-red/10" : isDark ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-100"
               )}>
                 <div className="flex items-center gap-4">
                   <div className={clsx(
@@ -766,11 +766,11 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                   <div>
                     <p className={clsx(
                       "font-bold",
-                      isSyndicate ? "text-nasty-cream" : "text-slate-900"
+                      isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900"
                     )}>{t.name}</p>
                     <p className={clsx(
                       "text-xs",
-                      isSyndicate ? "text-nasty-cream/40" : "text-slate-500"
+                      isSyndicate ? "text-nasty-cream/40" : isDark ? "text-slate-400" : "text-slate-500"
                     )}>
                       {format(new Date(t.date), 'MMM d, yyyy • HH:mm')} • {t.status}
                     </p>
@@ -781,7 +781,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     onClick={() => setEditingTournament(t)}
                     className={clsx(
                       "p-2 rounded-lg transition-all",
-                      isSyndicate ? "text-nasty-cream/60 hover:text-nasty-cream hover:bg-syndicate-red/10" : "text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                      isSyndicate ? "text-nasty-cream/60 hover:text-nasty-cream hover:bg-syndicate-red/10" : isDark ? "text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10" : "text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
                     )}
                   >
                     <Edit className="w-5 h-5" />
@@ -790,7 +790,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     onClick={() => deleteTournament(t.id)}
                     className={clsx(
                       "p-2 rounded-lg transition-all",
-                      isSyndicate ? "text-nasty-cream/60 hover:text-syndicate-red hover:bg-syndicate-red/10" : "text-slate-400 hover:text-red-600 hover:bg-red-50"
+                      isSyndicate ? "text-nasty-cream/60 hover:text-syndicate-red hover:bg-syndicate-red/10" : isDark ? "text-slate-500 hover:text-red-400 hover:bg-red-500/10" : "text-slate-400 hover:text-red-600 hover:bg-red-50"
                     )}
                   >
                     <Trash2 className="w-5 h-5" />
@@ -805,18 +805,18 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
         {selectedTournamentId && (
           <section className={clsx(
             "p-8 rounded-3xl border shadow-sm",
-            isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : "bg-white border-slate-200"
+            isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
           )}>
             <div className="flex items-center gap-3 mb-8">
               <div className={clsx(
                 "p-2 rounded-xl",
-                isSyndicate ? "bg-syndicate-red/20 text-syndicate-red" : "bg-purple-100 text-purple-600"
+                isSyndicate ? "bg-syndicate-red/20 text-syndicate-red" : isDark ? "bg-purple-500/20 text-purple-400" : "bg-purple-100 text-purple-600"
               )}>
                 <Trophy className="w-6 h-6" />
               </div>
               <h2 className={clsx(
                 "text-xl font-bold",
-                isSyndicate ? "text-nasty-cream" : "text-slate-900"
+                isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900"
               )}>
                 Generate Bracket
               </h2>
@@ -826,7 +826,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
               <div className="flex-1">
                 <label className={clsx(
                   "block text-sm font-bold mb-2",
-                  isSyndicate ? "text-nasty-cream/60" : "text-slate-700"
+                  isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-700"
                 )}>Seeding Method</label>
                 <div className="grid grid-cols-3 gap-3">
                   {(['random', 'season', 'skill'] as const).map((method) => (
@@ -836,8 +836,8 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                       className={clsx(
                         "py-3 rounded-xl font-bold text-sm transition-all border capitalize",
                         seedingMethod === method 
-                          ? (isSyndicate ? "bg-syndicate-red/20 border-syndicate-red text-syndicate-red" : "bg-indigo-50 border-indigo-200 text-indigo-700")
-                          : (isSyndicate ? "bg-black/40 border-syndicate-red/10 text-nasty-cream/40" : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50")
+                          ? (isSyndicate ? "bg-syndicate-red/20 border-syndicate-red text-syndicate-red" : isDark ? "bg-indigo-500/20 border-indigo-500/50 text-indigo-400" : "bg-indigo-50 border-indigo-200 text-indigo-700")
+                          : (isSyndicate ? "bg-black/40 border-syndicate-red/10 text-nasty-cream/40" : isDark ? "bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700" : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50")
                       )}
                     >
                       {method}
@@ -850,7 +850,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                 onClick={() => handleGenerateBracket(selectedTournamentId)}
                 className={clsx(
                   "px-8 py-3 rounded-xl font-bold text-white transition-all shadow-lg",
-                  isSyndicate ? "bg-syndicate-red hover:bg-red-700" : "bg-indigo-600 hover:bg-indigo-700"
+                  isSyndicate ? "bg-syndicate-red hover:bg-red-700" : isDark ? "bg-indigo-500 hover:bg-indigo-600" : "bg-indigo-600 hover:bg-indigo-700"
                 )}
               >
                 Generate & Start Tournament
@@ -859,7 +859,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
             
             <p className={clsx(
               "mt-4 text-sm",
-              isSyndicate ? "text-nasty-cream/40" : "text-slate-500"
+              isSyndicate ? "text-nasty-cream/40" : isDark ? "text-slate-400" : "text-slate-500"
             )}>
               This will generate the first round of matches and set the tournament status to 'Live'.
               Existing matches for this tournament will be deleted.
@@ -871,18 +871,18 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
       {/* Venue Management */}
       <section className={clsx(
         "p-8 rounded-3xl border shadow-sm",
-        isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : "bg-white border-slate-200"
+        isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
       )}>
         <div className="flex items-center gap-3 mb-8">
           <div className={clsx(
             "p-2 rounded-xl",
-            isSyndicate ? "bg-syndicate-red/20 text-syndicate-red" : "bg-indigo-100 text-indigo-600"
+            isSyndicate ? "bg-syndicate-red/20 text-syndicate-red" : isDark ? "bg-indigo-500/20 text-indigo-400" : "bg-indigo-100 text-indigo-600"
           )}>
             <MapPin className="w-6 h-6" />
           </div>
           <h2 className={clsx(
             "text-xl font-bold",
-            isSyndicate ? "text-nasty-cream" : "text-slate-900"
+            isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900"
           )}>
             Venue Management
           </h2>
@@ -891,33 +891,39 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <div className="space-y-4">
             <div>
-              <label className={clsx("block text-sm font-bold mb-2", isSyndicate ? "text-nasty-cream/60" : "text-slate-700")}>Venue Name</label>
+              <label className={clsx("block text-sm font-bold mb-2", isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-700")}>Venue Name</label>
               <input
                 type="text"
                 value={newVenue.name}
                 onChange={(e) => setNewVenue({ ...newVenue, name: e.target.value })}
-                className={clsx("w-full px-4 py-3 rounded-xl border outline-none", isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : "bg-white border-slate-200")}
+                className={clsx(
+                      "w-full px-4 py-3 rounded-xl border outline-none",
+                      isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500")}
                 placeholder="e.g. The Bullseye Pub"
               />
             </div>
             <div>
-              <label className={clsx("block text-sm font-bold mb-2", isSyndicate ? "text-nasty-cream/60" : "text-slate-700")}>Address</label>
+              <label className={clsx("block text-sm font-bold mb-2", isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-700")}>Address</label>
               <input
                 type="text"
                 value={newVenue.address}
                 onChange={(e) => setNewVenue({ ...newVenue, address: e.target.value })}
-                className={clsx("w-full px-4 py-3 rounded-xl border outline-none", isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : "bg-white border-slate-200")}
+                className={clsx(
+                      "w-full px-4 py-3 rounded-xl border outline-none",
+                      isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500")}
                 placeholder="123 Dart St, Phoenix, AZ"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={clsx("block text-sm font-bold mb-2", isSyndicate ? "text-nasty-cream/60" : "text-slate-700")}>Number of Boards</label>
+                <label className={clsx("block text-sm font-bold mb-2", isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-700")}>Number of Boards</label>
                 <input
                   type="number"
                   value={newVenue.boards}
                   onChange={(e) => setNewVenue({ ...newVenue, boards: parseInt(e.target.value) })}
-                  className={clsx("w-full px-4 py-3 rounded-xl border outline-none", isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : "bg-white border-slate-200")}
+                  className={clsx(
+                      "w-full px-4 py-3 rounded-xl border outline-none",
+                      isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500")}
                 />
               </div>
               <div className="flex items-end pb-3">
@@ -928,7 +934,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     onChange={(e) => setNewVenue({ ...newVenue, isSyndicatePartner: e.target.checked })}
                     className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                   />
-                  <span className={clsx("text-sm font-bold", isSyndicate ? "text-nasty-cream/60" : "text-slate-700")}>Syndicate Partner</span>
+                  <span className={clsx("text-sm font-bold", isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-700")}>Syndicate Partner</span>
                 </label>
               </div>
             </div>
@@ -936,7 +942,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
               onClick={createVenue}
               className={clsx(
                 "w-full py-4 rounded-2xl font-bold transition-all shadow-lg",
-                isSyndicate ? "bg-syndicate-red text-white hover:bg-red-700" : "bg-indigo-600 text-white hover:bg-indigo-700"
+                isSyndicate ? "bg-syndicate-red text-white hover:bg-red-700" : isDark ? "bg-indigo-500 text-white hover:bg-indigo-600" : "bg-indigo-600 text-white hover:bg-indigo-700"
               )}
             >
               Add Venue
@@ -947,11 +953,11 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
             {venues.map(venue => (
               <div key={venue.id} className={clsx(
                 "flex items-center justify-between p-4 rounded-2xl border",
-                isSyndicate ? "bg-black/20 border-syndicate-red/10" : "bg-slate-50 border-slate-100"
+                isSyndicate ? "bg-black/20 border-syndicate-red/10" : isDark ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-100"
               )}>
                 <div>
-                  <p className={clsx("font-bold", isSyndicate ? "text-nasty-cream" : "text-slate-900")}>{venue.name}</p>
-                  <p className={clsx("text-xs", isSyndicate ? "text-nasty-cream/40" : "text-slate-500")}>{venue.address} • {venue.boards} Boards</p>
+                  <p className={clsx("font-bold", isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900")}>{venue.name}</p>
+                  <p className={clsx("text-xs", isSyndicate ? "text-nasty-cream/40" : isDark ? "text-slate-400" : "text-slate-500")}>{venue.address} • {venue.boards} Boards</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -976,18 +982,18 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
       {/* Player Management */}
         <section className={clsx(
           "p-8 rounded-3xl border shadow-sm",
-          isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : "bg-white border-slate-200"
+          isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
         )}>
           <div className="flex items-center gap-3 mb-8">
             <div className={clsx(
               "p-2 rounded-xl",
-              isSyndicate ? "bg-syndicate-red/20 text-syndicate-red" : "bg-blue-100 text-blue-600"
+              isSyndicate ? "bg-syndicate-red/20 text-syndicate-red" : isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-600"
             )}>
               <Users className="w-6 h-6" />
             </div>
             <h2 className={clsx(
               "text-xl font-bold",
-              isSyndicate ? "text-nasty-cream" : "text-slate-900"
+              isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900"
             )}>
               Add New Player
             </h2>
@@ -1000,8 +1006,8 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
               onChange={(e) => setNewPlayer({ ...newPlayer, firstName: e.target.value })}
               placeholder="First Name"
               className={clsx(
-                "px-4 py-3 rounded-xl border outline-none",
-                isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : "bg-white border-slate-200"
+                      "px-4 py-3 rounded-xl border outline-none",
+                      isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
               )}
             />
             <input
@@ -1010,8 +1016,8 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
               onChange={(e) => setNewPlayer({ ...newPlayer, lastName: e.target.value })}
               placeholder="Last Name"
               className={clsx(
-                "px-4 py-3 rounded-xl border outline-none",
-                isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : "bg-white border-slate-200"
+                      "px-4 py-3 rounded-xl border outline-none",
+                      isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
               )}
             />
             <div className="flex gap-2">
@@ -1021,15 +1027,15 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                 onChange={(e) => setNewPlayer({ ...newPlayer, email: e.target.value })}
                 placeholder="Email Address"
                 className={clsx(
-                  "flex-1 px-4 py-3 rounded-xl border outline-none",
-                  isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : "bg-white border-slate-200"
+                      "flex-1 px-4 py-3 rounded-xl border outline-none",
+                      isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
                 )}
               />
               <button
                 onClick={createPlayer}
                 className={clsx(
                   "p-3 rounded-xl text-white",
-                  isSyndicate ? "bg-syndicate-red" : "bg-blue-600"
+                  isSyndicate ? "bg-syndicate-red" : isDark ? "bg-blue-500" : "bg-blue-600"
                 )}
               >
                 <Plus className="w-6 h-6" />
@@ -1040,7 +1046,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
           <div className="flex items-center gap-3 mb-4">
             <h3 className={clsx(
               "text-lg font-bold",
-              isSyndicate ? "text-nasty-cream" : "text-slate-900"
+              isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900"
             )}>
               Tournament Participants
             </h3>
@@ -1048,8 +1054,8 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
               value={selectedTournamentId}
               onChange={(e) => setSelectedTournamentId(e.target.value)}
               className={clsx(
-                "px-3 py-2 rounded-lg border text-sm",
-                isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : "bg-white border-slate-200"
+                      "px-3 py-2 rounded-lg border text-sm",
+                      isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200"
               )}
             >
               <option value="">Select Tournament to Manage</option>
@@ -1064,39 +1070,39 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
             <thead>
               <tr className={clsx(
                 "border-b",
-                isSyndicate ? "border-syndicate-red/10" : "border-slate-100"
+                isSyndicate ? "border-syndicate-red/10" : isDark ? "border-slate-800" : "border-slate-100"
               )}>
                 <th className={clsx(
                   "pb-4 font-bold text-sm uppercase tracking-wider",
-                  isSyndicate ? "text-nasty-cream/40" : "text-slate-500"
+                  isSyndicate ? "text-nasty-cream/40" : isDark ? "text-slate-400" : "text-slate-500"
                 )}>Player</th>
                 <th className={clsx(
                   "pb-4 font-bold text-sm uppercase tracking-wider",
-                  isSyndicate ? "text-nasty-cream/40" : "text-slate-500"
+                  isSyndicate ? "text-nasty-cream/40" : isDark ? "text-slate-400" : "text-slate-500"
                 )}>Email</th>
                 <th className={clsx(
                   "pb-4 font-bold text-sm uppercase tracking-wider",
-                  isSyndicate ? "text-nasty-cream/40" : "text-slate-500"
+                  isSyndicate ? "text-nasty-cream/40" : isDark ? "text-slate-400" : "text-slate-500"
                 )}>Role</th>
                 <th className={clsx(
                   "pb-4 font-bold text-sm uppercase tracking-wider",
-                  isSyndicate ? "text-nasty-cream/40" : "text-slate-500"
+                  isSyndicate ? "text-nasty-cream/40" : isDark ? "text-slate-400" : "text-slate-500"
                 )}>Vested</th>
                 {selectedTournamentId && (
                   <th className={clsx(
                     "pb-4 font-bold text-sm uppercase tracking-wider",
-                    isSyndicate ? "text-nasty-cream/40" : "text-slate-500"
+                    isSyndicate ? "text-nasty-cream/40" : isDark ? "text-slate-400" : "text-slate-500"
                   )}>In Tournament</th>
                 )}
                 <th className={clsx(
                   "pb-4 font-bold text-sm uppercase tracking-wider text-right",
-                  isSyndicate ? "text-nasty-cream/40" : "text-slate-500"
+                  isSyndicate ? "text-nasty-cream/40" : isDark ? "text-slate-400" : "text-slate-500"
                 )}>Actions</th>
               </tr>
             </thead>
             <tbody className={clsx(
               "divide-y",
-              isSyndicate ? "divide-syndicate-red/10" : "divide-slate-100"
+              isSyndicate ? "divide-syndicate-red/10" : isDark ? "divide-slate-800" : "divide-slate-100"
             )}>
               {players.map(p => (
                 <tr key={p.uid}>
@@ -1112,13 +1118,13 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                       />
                       <span className={clsx(
                         "font-bold",
-                        isSyndicate ? "text-nasty-cream" : "text-slate-900"
+                        isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900"
                       )}>{p.name}</span>
                     </div>
                   </td>
                   <td className={clsx(
                     "py-4 text-sm",
-                    isSyndicate ? "text-nasty-cream/60" : "text-slate-500"
+                    isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-500"
                   )}>{p.email}</td>
                   <td className="py-4">
                     <span className={clsx(
@@ -1127,7 +1133,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                         ? (isSyndicate ? "bg-syndicate-red/20 text-syndicate-red" : "bg-purple-100 text-purple-700") 
                         : p.role === 'coordinator'
                           ? (isSyndicate ? "bg-amber-500/20 text-amber-500" : "bg-amber-100 text-amber-700")
-                          : (isSyndicate ? "bg-black/40 text-nasty-cream/40" : "bg-slate-100 text-slate-600")
+                          : (isSyndicate ? "bg-black/40 text-nasty-cream/40" : isDark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-600")
                     )}>
                       {p.role}
                     </span>
@@ -1171,7 +1177,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                             onChange={(e) => updatePlayerRole(p.uid, e.target.value as 'admin' | 'coordinator' | 'player')}
                             className={clsx(
                               "text-sm border rounded-lg px-2 py-1 outline-none",
-                              isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                              isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
                             )}
                           >
                             <option value="player">Player</option>
@@ -1204,14 +1210,14 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
             animate={{ opacity: 1, scale: 1 }}
             className={clsx(
               "w-full max-w-lg rounded-3xl border shadow-2xl overflow-hidden",
-              isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : "bg-white border-slate-200"
+              isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
             )}
           >
             <div className="p-8">
               <div className="flex items-center justify-between mb-8">
                 <h2 className={clsx(
                   "text-2xl font-bold",
-                  isSyndicate ? "text-nasty-cream font-rocker" : "text-slate-900"
+                  isSyndicate ? "text-nasty-cream font-rocker" : isDark ? "text-slate-50" : "text-slate-900"
                 )}>Edit Venue</h2>
                 <button onClick={() => setEditingVenue(null)} className="text-slate-400 hover:text-slate-600">
                   <X className="w-6 h-6" />
@@ -1227,7 +1233,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     onChange={(e) => setEditingVenue({ ...editingVenue, name: e.target.value })}
                     className={clsx(
                       "w-full px-4 py-3 rounded-xl border outline-none",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : "bg-white border-slate-200"
+                      isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
                     )}
                   />
                 </div>
@@ -1240,7 +1246,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     onChange={(e) => setEditingVenue({ ...editingVenue, address: e.target.value })}
                     className={clsx(
                       "w-full px-4 py-3 rounded-xl border outline-none",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : "bg-white border-slate-200"
+                      isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
                     )}
                   />
                 </div>
@@ -1253,8 +1259,8 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                       value={editingVenue.boards}
                       onChange={(e) => setEditingVenue({ ...editingVenue, boards: parseInt(e.target.value) })}
                       className={clsx(
-                        "w-full px-4 py-3 rounded-xl border outline-none",
-                        isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : "bg-white border-slate-200"
+                      "w-full px-4 py-3 rounded-xl border outline-none",
+                      isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
                       )}
                     />
                   </div>
@@ -1266,7 +1272,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                         onChange={(e) => setEditingVenue({ ...editingVenue, isSyndicatePartner: e.target.checked })}
                         className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                       />
-                      <span className={clsx("text-sm font-bold", isSyndicate ? "text-nasty-cream/60" : "text-slate-700")}>Syndicate Partner</span>
+                      <span className={clsx("text-sm font-bold", isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-700")}>Syndicate Partner</span>
                     </label>
                   </div>
                 </div>
@@ -1276,7 +1282,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     onClick={() => setEditingVenue(null)}
                     className={clsx(
                       "flex-1 py-4 rounded-2xl font-bold transition-all",
-                      isSyndicate ? "bg-black/40 text-nasty-cream hover:bg-black/60" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      isSyndicate ? "bg-black/40 text-nasty-cream hover:bg-black/60" : isDark ? "bg-slate-800 text-slate-400 hover:bg-slate-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                     )}
                   >
                     Cancel
@@ -1285,7 +1291,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     onClick={updateVenue}
                     className={clsx(
                       "flex-1 py-4 rounded-2xl font-bold transition-all shadow-lg",
-                      isSyndicate ? "bg-syndicate-red text-white hover:bg-red-700" : "bg-indigo-600 text-white hover:bg-indigo-700"
+                      isSyndicate ? "bg-syndicate-red text-white hover:bg-red-700" : isDark ? "bg-indigo-500 text-white hover:bg-indigo-600" : "bg-indigo-600 text-white hover:bg-indigo-700"
                     )}
                   >
                     Save Changes
@@ -1301,7 +1307,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className={clsx(
             "w-full max-w-2xl p-8 rounded-3xl border shadow-2xl max-h-[90vh] overflow-y-auto",
-            isSyndicate ? "bg-onyx border-syndicate-red/30 text-nasty-cream" : "bg-white border-slate-200 text-slate-900"
+            isSyndicate ? "bg-onyx border-syndicate-red/30 text-nasty-cream" : isDark ? "bg-slate-900 border-slate-800 text-slate-50" : "bg-white border-slate-200 text-slate-900"
           )}>
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold">Edit Tournament</h2>
@@ -1323,7 +1329,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     onChange={(e) => setEditingTournament({ ...editingTournament, name: e.target.value })}
                     className={clsx(
                       "w-full px-4 py-3 rounded-xl border outline-none transition-all",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                      isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : isDark ? "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
                     )}
                   />
                 </div>
@@ -1335,7 +1341,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     onChange={(e) => setEditingTournament({ ...editingTournament, date: e.target.value })}
                     className={clsx(
                       "w-full px-4 py-3 rounded-xl border outline-none transition-all",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                      isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : isDark ? "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
                     )}
                   />
                 </div>
@@ -1349,7 +1355,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     onChange={(e) => setEditingTournament({ ...editingTournament, seasonId: e.target.value })}
                     className={clsx(
                       "w-full px-4 py-3 rounded-xl border outline-none transition-all",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                      isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : isDark ? "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
                     )}
                   >
                     <option value="">Select Season</option>
@@ -1365,7 +1371,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     onChange={(e) => setEditingTournament({ ...editingTournament, venueId: e.target.value })}
                     className={clsx(
                       "w-full px-4 py-3 rounded-xl border outline-none transition-all",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                      isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : isDark ? "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
                     )}
                   >
                     <option value="">Select Venue</option>
@@ -1384,7 +1390,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     onChange={(e) => setEditingTournament({ ...editingTournament, type: e.target.value as 'single-elimination' | 'double-elimination' | 'round-robin' })}
                     className={clsx(
                       "w-full px-4 py-3 rounded-xl border outline-none transition-all",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                      isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : isDark ? "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
                     )}
                   >
                     <option value="single">Single Elimination</option>
@@ -1399,7 +1405,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     onChange={(e) => setEditingTournament({ ...editingTournament, status: e.target.value as 'upcoming' | 'live' | 'completed' })}
                     className={clsx(
                       "w-full px-4 py-3 rounded-xl border outline-none transition-all",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                      isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : isDark ? "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
                     )}
                   >
                     <option value="upcoming">Upcoming</option>
@@ -1417,8 +1423,8 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     className={clsx(
                       "py-3 rounded-xl border font-bold transition-all",
                       editingTournament.gameType === 'X01'
-                        ? (isSyndicate ? "bg-syndicate-red border-syndicate-red text-white" : "bg-indigo-600 border-indigo-600 text-white")
-                        : (isSyndicate ? "bg-black/20 border-syndicate-red/10 text-nasty-cream/40" : "bg-white border-slate-200 text-slate-400")
+                        ? (isSyndicate ? "bg-syndicate-red border-syndicate-red text-white" : isDark ? "bg-indigo-500 border-indigo-500 text-white" : "bg-indigo-600 border-indigo-600 text-white")
+                        : (isSyndicate ? "bg-black/20 border-syndicate-red/10 text-nasty-cream/40" : isDark ? "bg-slate-800 border-slate-700 text-slate-400" : "bg-white border-slate-200 text-slate-400")
                     )}
                   >
                     X01
@@ -1428,8 +1434,8 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     className={clsx(
                       "py-3 rounded-xl border font-bold transition-all",
                       editingTournament.gameType === 'Cricket'
-                        ? (isSyndicate ? "bg-syndicate-red border-syndicate-red text-white" : "bg-indigo-600 border-indigo-600 text-white")
-                        : (isSyndicate ? "bg-black/20 border-syndicate-red/10 text-nasty-cream/40" : "bg-white border-slate-200 text-slate-400")
+                        ? (isSyndicate ? "bg-syndicate-red border-syndicate-red text-white" : isDark ? "bg-indigo-500 border-indigo-500 text-white" : "bg-indigo-600 border-indigo-600 text-white")
+                        : (isSyndicate ? "bg-black/20 border-syndicate-red/10 text-nasty-cream/40" : isDark ? "bg-slate-800 border-slate-700 text-slate-400" : "bg-white border-slate-200 text-slate-400")
                     )}
                   >
                     Cricket
@@ -1440,7 +1446,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
               {/* Game Config */}
               <div className={clsx(
                 "p-6 rounded-2xl border",
-                isSyndicate ? "bg-black/20 border-syndicate-red/10" : "bg-slate-50 border-slate-100"
+                isSyndicate ? "bg-black/20 border-syndicate-red/10" : isDark ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-100"
               )}>
                 {editingTournament.gameType === 'X01' ? (
                   <div className="grid grid-cols-2 gap-6">
@@ -1453,8 +1459,8 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                           gameConfig: { ...editingTournament.gameConfig, startScore: parseInt(e.target.value) as 301 | 501 | 701 }
                         })}
                         className={clsx(
-                          "w-full px-3 py-2 rounded-lg border text-sm",
-                          isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : "bg-white border-slate-200"
+                      "w-full px-3 py-2 rounded-lg border text-sm",
+                      isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200"
                         )}
                       >
                         <option value="301">301</option>
@@ -1471,8 +1477,8 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                           gameConfig: { ...(editingTournament.gameConfig as X01Config), outRule: e.target.value as 'single' | 'double' | 'triple' }
                         })}
                         className={clsx(
-                          "w-full px-3 py-2 rounded-lg border text-sm",
-                          isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : "bg-white border-slate-200"
+                      "w-full px-3 py-2 rounded-lg border text-sm",
+                      isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200"
                         )}
                       >
                         <option value="single">Single Out</option>
@@ -1492,8 +1498,8 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                           gameConfig: { ...(editingTournament.gameConfig as CricketConfig), mode: e.target.value as 'Standard' | 'Cut Throat' }
                         })}
                         className={clsx(
-                          "px-3 py-2 rounded-lg border text-sm",
-                          isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : "bg-white border-slate-200"
+                      "px-3 py-2 rounded-lg border text-sm",
+                      isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200"
                         )}
                       >
                         <option value="Standard">Standard</option>
@@ -1509,7 +1515,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                   onClick={() => setEditingTournament(null)}
                   className={clsx(
                     "flex-1 py-4 rounded-2xl font-bold transition-all",
-                    isSyndicate ? "bg-black/40 text-nasty-cream hover:bg-black/60" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    isSyndicate ? "bg-black/40 text-nasty-cream hover:bg-black/60" : isDark ? "bg-slate-800 text-slate-400 hover:bg-slate-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   )}
                 >
                   Cancel
@@ -1518,7 +1524,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                   onClick={updateTournament}
                   className={clsx(
                     "flex-1 py-4 rounded-2xl font-bold transition-all shadow-lg",
-                    isSyndicate ? "bg-syndicate-red text-white hover:bg-red-700" : "bg-indigo-600 text-white hover:bg-indigo-700"
+                    isSyndicate ? "bg-syndicate-red text-white hover:bg-red-700" : isDark ? "bg-indigo-500 text-white hover:bg-indigo-600" : "bg-indigo-600 text-white hover:bg-indigo-700"
                   )}
                 >
                   Save Changes
