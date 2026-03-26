@@ -25,7 +25,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
   const isCoordinator = currentUser?.role === 'coordinator';
   const hasAdminPrivileges = isAdmin || isCoordinator;
 
-  const { isSyndicate } = useTheme();
+  const { isSyndicate, isDark } = useTheme();
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [newPlayer, setNewPlayer] = useState({ firstName: '', lastName: '', email: '' });
   const [selectedTournamentId, setSelectedTournamentId] = useState<string>('');
@@ -312,13 +312,13 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
       <header className="mb-12">
         <h1 className={clsx(
           "text-4xl font-bold mb-2 tracking-tight",
-          isSyndicate ? "text-nasty-cream font-rocker" : "text-slate-900"
+          isSyndicate ? "text-nasty-cream font-rocker" : isDark ? "text-slate-50" : "text-slate-900"
         )}>
           Admin Dashboard
         </h1>
         <p className={clsx(
           "text-lg",
-          isSyndicate ? "text-nasty-cream/60" : "text-slate-500"
+          isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-500"
         )}>
           Manage seasons, tournaments, and player permissions.
         </p>
@@ -329,18 +329,18 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
         {isAdmin && (
           <section className={clsx(
             "p-8 rounded-3xl border shadow-sm",
-            isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : "bg-white border-slate-200"
+            isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
           )}>
             <div className="flex items-center gap-3 mb-8">
               <div className={clsx(
                 "p-2 rounded-xl",
-                isSyndicate ? "bg-syndicate-red/20 text-syndicate-red" : "bg-indigo-100 text-indigo-600"
+                isSyndicate ? "bg-syndicate-red/20 text-syndicate-red" : isDark ? "bg-indigo-500/20 text-indigo-400" : "bg-indigo-100 text-indigo-600"
               )}>
                 <Calendar className="w-6 h-6" />
               </div>
               <h2 className={clsx(
                 "text-xl font-bold",
-                isSyndicate ? "text-nasty-cream" : "text-slate-900"
+                isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900"
               )}>
                 Seasons
               </h2>
@@ -356,7 +356,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                   "flex-1 px-4 py-3 rounded-xl border outline-none transition-all",
                   isSyndicate 
                     ? "bg-black/40 border-syndicate-red/30 text-nasty-cream focus:border-syndicate-red" 
-                    : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                    : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
                 )}
               />
               <button
@@ -365,7 +365,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                   "p-3 rounded-xl transition-colors shadow-lg",
                   isSyndicate 
                     ? "bg-syndicate-red text-white hover:bg-red-700 shadow-red-900/20" 
-                    : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100"
+                    : isDark ? "bg-indigo-500 text-white hover:bg-indigo-600" : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100"
                 )}
               >
                 <Plus className="w-6 h-6" />
@@ -378,16 +378,16 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                   "flex items-center justify-between p-4 rounded-2xl border",
                   isSyndicate 
                     ? "bg-black/20 border-syndicate-red/10" 
-                    : "bg-slate-50 border-slate-100"
+                    : isDark ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-100"
                 )}>
                   <div>
                     <p className={clsx(
                       "font-bold",
-                      isSyndicate ? "text-nasty-cream" : "text-slate-900"
+                      isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900"
                     )}>{season.name}</p>
                     <p className={clsx(
                       "text-xs",
-                      isSyndicate ? "text-nasty-cream/40" : "text-slate-500"
+                      isSyndicate ? "text-nasty-cream/40" : isDark ? "text-slate-400" : "text-slate-500"
                     )}>Started {format(new Date(season.startDate), 'MMM d, yyyy')}</p>
                   </div>
                   <button
@@ -395,8 +395,8 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     className={clsx(
                       "px-4 py-2 rounded-lg text-sm font-bold transition-all border",
                       season.active 
-                        ? (isSyndicate ? "bg-syndicate-red/20 text-syndicate-red border-syndicate-red/30" : "bg-emerald-100 text-emerald-700 border border-emerald-200")
-                        : (isSyndicate ? "bg-black/40 text-nasty-cream/40 border-syndicate-red/10" : "bg-slate-200 text-slate-600 border border-slate-300")
+                        ? (isSyndicate ? "bg-syndicate-red/20 text-syndicate-red border-syndicate-red/30" : isDark ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-emerald-100 text-emerald-700 border border-emerald-200")
+                        : (isSyndicate ? "bg-black/40 text-nasty-cream/40 border-syndicate-red/10" : isDark ? "bg-slate-700 text-slate-400 border border-slate-600" : "bg-slate-200 text-slate-600 border border-slate-300")
                     )}
                   >
                     {season.active ? 'Active' : 'Inactive'}
@@ -410,18 +410,18 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
         {/* Tournament Creation */}
         <section className={clsx(
           "p-8 rounded-3xl border shadow-sm",
-          isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : "bg-white border-slate-200"
+          isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
         )}>
           <div className="flex items-center gap-3 mb-8">
             <div className={clsx(
               "p-2 rounded-xl",
-              isSyndicate ? "bg-syndicate-red/20 text-syndicate-red" : "bg-amber-100 text-amber-600"
+              isSyndicate ? "bg-syndicate-red/20 text-syndicate-red" : isDark ? "bg-amber-500/20 text-amber-500" : "bg-amber-100 text-amber-600"
             )}>
               <Trophy className="w-6 h-6" />
             </div>
             <h2 className={clsx(
               "text-xl font-bold",
-              isSyndicate ? "text-nasty-cream" : "text-slate-900"
+              isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900"
             )}>
               New Tournament
             </h2>
@@ -431,7 +431,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
             <div>
               <label className={clsx(
                 "block text-sm font-bold mb-2",
-                isSyndicate ? "text-nasty-cream/60" : "text-slate-700"
+                isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-700"
               )}>Tournament Name</label>
               <input
                 type="text"
@@ -441,7 +441,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                   "w-full px-4 py-3 rounded-xl border outline-none",
                   isSyndicate 
                     ? "bg-black/40 border-syndicate-red/30 text-nasty-cream focus:border-syndicate-red" 
-                    : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                    : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
                 )}
                 placeholder="e.g. Friday Night Open"
               />
@@ -450,7 +450,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
               <div>
                 <label className={clsx(
                   "block text-sm font-bold mb-2",
-                  isSyndicate ? "text-nasty-cream/60" : "text-slate-700"
+                  isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-700"
                 )}>Date & Time</label>
                 <input
                   type="datetime-local"
@@ -460,14 +460,14 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     "w-full px-4 py-3 rounded-xl border outline-none",
                     isSyndicate 
                       ? "bg-black/40 border-syndicate-red/30 text-nasty-cream focus:border-syndicate-red" 
-                      : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                      : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
                   )}
                 />
               </div>
               <div>
                 <label className={clsx(
                   "block text-sm font-bold mb-2",
-                  isSyndicate ? "text-nasty-cream/60" : "text-slate-700"
+                  isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-700"
                 )}>Season</label>
                 <select
                   value={newTournament.seasonId}
@@ -476,7 +476,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     "w-full px-4 py-3 rounded-xl border outline-none",
                     isSyndicate 
                       ? "bg-black/40 border-syndicate-red/30 text-nasty-cream focus:border-syndicate-red" 
-                      : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                      : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
                   )}
                 >
                   <option value="">Select Season</option>
@@ -490,7 +490,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
             <div>
               <label className={clsx(
                 "block text-sm font-bold mb-2",
-                isSyndicate ? "text-nasty-cream/60" : "text-slate-700"
+                isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-700"
               )}>Venue</label>
               <select
                 value={newTournament.venueId}
@@ -499,7 +499,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                   "w-full px-4 py-3 rounded-xl border outline-none",
                   isSyndicate 
                     ? "bg-black/40 border-syndicate-red/30 text-nasty-cream focus:border-syndicate-red" 
-                    : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                    : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
                 )}
               >
                 <option value="">Select Venue</option>
@@ -511,31 +511,31 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
 
             <div className={clsx(
               "pt-4 border-t",
-              isSyndicate ? "border-syndicate-red/10" : "border-slate-100"
+              isSyndicate ? "border-syndicate-red/10" : isDark ? "border-slate-800" : "border-slate-100"
             )}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Settings2 className="w-4 h-4 text-slate-400" />
                   <h3 className={clsx(
                     "text-sm font-bold uppercase tracking-wider",
-                    isSyndicate ? "text-nasty-cream" : "text-slate-900"
+                    isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900"
                   )}>Game Rules</h3>
                 </div>
                 
                 <div className="flex items-center gap-2">
                   <Skull className={clsx(
                     "w-4 h-4",
-                    newTournament.isSyndicate ? "text-syndicate-red" : "text-slate-400"
+                    newTournament.isSyndicate ? "text-syndicate-red" : isDark ? "text-slate-500" : "text-slate-400"
                   )} />
                   <label className={clsx(
                     "text-xs font-bold uppercase tracking-wider",
-                    isSyndicate ? "text-nasty-cream/60" : "text-slate-500"
+                    isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-500"
                   )}>Syndicate Mode</label>
                   <button
                     onClick={() => setNewTournament({ ...newTournament, isSyndicate: !newTournament.isSyndicate })}
                     className={clsx(
                       "w-10 h-5 rounded-full transition-all relative",
-                      newTournament.isSyndicate ? "bg-syndicate-red" : "bg-slate-300"
+                      newTournament.isSyndicate ? "bg-syndicate-red" : isDark ? "bg-slate-700" : "bg-slate-300"
                     )}
                   >
                     <div className={clsx(
@@ -552,8 +552,8 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                   className={clsx(
                     "py-3 rounded-xl font-bold text-sm transition-all border",
                     newTournament.gameType === 'X01' 
-                      ? (isSyndicate ? "bg-syndicate-red/20 border-syndicate-red text-syndicate-red" : "bg-indigo-50 border-indigo-200 text-indigo-700")
-                      : (isSyndicate ? "bg-black/40 border-syndicate-red/10 text-nasty-cream/40" : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50")
+                      ? (isSyndicate ? "bg-syndicate-red/20 border-syndicate-red text-syndicate-red" : isDark ? "bg-indigo-500/20 border-indigo-500/50 text-indigo-400" : "bg-indigo-50 border-indigo-200 text-indigo-700")
+                      : (isSyndicate ? "bg-black/40 border-syndicate-red/10 text-nasty-cream/40" : isDark ? "bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700" : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50")
                   )}
                 >
                   X01
@@ -563,8 +563,8 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                   className={clsx(
                     "py-3 rounded-xl font-bold text-sm transition-all border",
                     newTournament.gameType === 'Cricket' 
-                      ? (isSyndicate ? "bg-syndicate-red/20 border-syndicate-red text-syndicate-red" : "bg-indigo-50 border-indigo-200 text-indigo-700")
-                      : (isSyndicate ? "bg-black/40 border-syndicate-red/10 text-nasty-cream/40" : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50")
+                      ? (isSyndicate ? "bg-syndicate-red/20 border-syndicate-red text-syndicate-red" : isDark ? "bg-indigo-500/20 border-indigo-500/50 text-indigo-400" : "bg-indigo-50 border-indigo-200 text-indigo-700")
+                      : (isSyndicate ? "bg-black/40 border-syndicate-red/10 text-nasty-cream/40" : isDark ? "bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700" : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50")
                   )}
                 >
                   Cricket
@@ -574,13 +574,13 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
               {newTournament.gameType === 'X01' && (
                 <div className={clsx(
                   "space-y-4 p-4 rounded-2xl border",
-                  isSyndicate ? "bg-black/20 border-syndicate-red/10" : "bg-slate-50 border-slate-100"
+                  isSyndicate ? "bg-black/20 border-syndicate-red/10" : isDark ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-100"
                 )}>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className={clsx(
                         "block text-xs font-bold mb-1 uppercase",
-                        isSyndicate ? "text-nasty-cream/40" : "text-slate-500"
+                        isSyndicate ? "text-nasty-cream/40" : isDark ? "text-slate-400" : "text-slate-500"
                       )}>Start Score</label>
                       <select
                         value={(newTournament.gameConfig as X01Config).startScore}
@@ -590,7 +590,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                         })}
                         className={clsx(
                           "w-full px-3 py-2 rounded-lg border text-sm",
-                          isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : "bg-white border-slate-200"
+                          isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : isDark ? "bg-slate-900 border-slate-700 text-slate-50" : "bg-white border-slate-200"
                         )}
                       >
                         <option value={301}>301</option>
@@ -601,7 +601,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     <div>
                       <label className={clsx(
                         "block text-xs font-bold mb-1 uppercase",
-                        isSyndicate ? "text-nasty-cream/40" : "text-slate-500"
+                        isSyndicate ? "text-nasty-cream/40" : isDark ? "text-slate-400" : "text-slate-500"
                       )}>Sets</label>
                       <input
                         type="number"
@@ -613,7 +613,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                         })}
                         className={clsx(
                           "w-full px-3 py-2 rounded-lg border text-sm",
-                          isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : "bg-white border-slate-200"
+                          isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : isDark ? "bg-slate-900 border-slate-700 text-slate-50" : "bg-white border-slate-200"
                         )}
                       />
                     </div>
@@ -622,7 +622,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                     <div>
                       <label className={clsx(
                         "block text-xs font-bold mb-1 uppercase",
-                        isSyndicate ? "text-nasty-cream/40" : "text-slate-500"
+                        isSyndicate ? "text-nasty-cream/40" : isDark ? "text-slate-400" : "text-slate-500"
                       )}>Legs per Set</label>
                       <input
                         type="number"
@@ -634,14 +634,14 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                         })}
                         className={clsx(
                           "w-full px-3 py-2 rounded-lg border text-sm",
-                          isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : "bg-white border-slate-200"
+                          isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : isDark ? "bg-slate-900 border-slate-700 text-slate-50" : "bg-white border-slate-200"
                         )}
                       />
                     </div>
                     <div>
                       <label className={clsx(
                         "block text-xs font-bold mb-1 uppercase",
-                        isSyndicate ? "text-nasty-cream/40" : "text-slate-500"
+                        isSyndicate ? "text-nasty-cream/40" : isDark ? "text-slate-400" : "text-slate-500"
                       )}>Out Rule</label>
                       <select
                         value={(newTournament.gameConfig as X01Config).outRule}
@@ -651,7 +651,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                         })}
                         className={clsx(
                           "w-full px-3 py-2 rounded-lg border text-sm",
-                          isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : "bg-white border-slate-200"
+                          isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : isDark ? "bg-slate-900 border-slate-700 text-slate-50" : "bg-white border-slate-200"
                         )}
                       >
                         <option value="single">Single Out</option>
@@ -666,12 +666,12 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
               {newTournament.gameType === 'Cricket' && (
                 <div className={clsx(
                   "space-y-4 p-4 rounded-2xl border",
-                  isSyndicate ? "bg-black/20 border-syndicate-red/10" : "bg-slate-50 border-slate-100"
+                  isSyndicate ? "bg-black/20 border-syndicate-red/10" : isDark ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-100"
                 )}>
                   <div className="flex items-center justify-between">
                     <label className={clsx(
                       "text-sm font-bold",
-                      isSyndicate ? "text-nasty-cream/60" : "text-slate-700"
+                      isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-700"
                     )}>Scoring Mode</label>
                     <select
                       value={(newTournament.gameConfig as CricketConfig).mode}
@@ -681,7 +681,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                       })}
                       className={clsx(
                         "px-3 py-2 rounded-lg border text-sm",
-                        isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : "bg-white border-slate-200"
+                        isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : isDark ? "bg-slate-900 border-slate-700 text-slate-50" : "bg-white border-slate-200"
                       )}
                     >
                       <option value="Standard">Standard</option>
@@ -691,7 +691,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                   <div className="flex items-center justify-between">
                     <label className={clsx(
                       "text-sm font-bold",
-                      isSyndicate ? "text-nasty-cream/60" : "text-slate-700"
+                      isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-700"
                     )}>Random Numbers</label>
                     <button
                       onClick={() => setNewTournament({
@@ -700,7 +700,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                       })}
                       className={clsx(
                         "w-12 h-6 rounded-full transition-all relative",
-                        (newTournament.gameConfig as CricketConfig).random ? (isSyndicate ? "bg-syndicate-red" : "bg-indigo-600") : "bg-slate-300"
+                        (newTournament.gameConfig as CricketConfig).random ? (isSyndicate ? "bg-syndicate-red" : "bg-indigo-600") : isDark ? "bg-slate-700" : "bg-slate-300"
                       )}
                     >
                       <div className={clsx(

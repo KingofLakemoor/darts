@@ -47,12 +47,14 @@ import {
   Monitor,
   Menu,
   X,
-  Calculator
+  Calculator,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { clsx } from 'clsx';
 
-export default function App() {
+function AppContent() {
   const [user, setUser] = useState<User | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,26 +62,15 @@ export default function App() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [activeSeason, setActiveSeason] = useState<Season | null>(null);
-  const [theme, setTheme] = useState<'clean' | 'syndicate'>('clean');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const { theme, toggleTheme, isSyndicate, isDark, isLight } = useTheme();
 
   useEffect(() => {
     // Apply theme class to body
-    if (theme === 'syndicate') {
-      document.body.classList.add('theme-syndicate');
-    } else {
-      document.body.classList.remove('theme-syndicate');
-    }
+    document.body.classList.remove('theme-syndicate', 'theme-dark', 'theme-light');
+    document.body.classList.add(`theme-${theme}`);
   }, [theme]);
-
-  // Automatically switch theme when entering Syndicate Mode tab
-  useEffect(() => {
-    if (activeTab === 'syndicate') {
-      setTheme('syndicate');
-    } else {
-      setTheme('clean');
-    }
-  }, [activeTab]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -192,25 +183,29 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className={clsx(
+        "min-h-screen flex items-center justify-center",
+        isSyndicate ? "bg-onyx" : isDark ? "bg-slate-900" : "bg-slate-50"
+      )}>
         <motion.div 
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
         >
-          <Target className="w-12 h-12 text-indigo-600" />
+          <Target className={clsx(
+            "w-12 h-12",
+            isSyndicate ? "text-syndicate-red" : isDark ? "text-indigo-400" : "text-indigo-600"
+          )} />
         </motion.div>
       </div>
     );
   }
 
   return (
-    <ErrorBoundary>
-      <ThemeProvider theme={theme}>
-        <div className={clsx(
-          "min-h-screen flex flex-col transition-colors duration-300 relative",
-          theme === 'syndicate' ? "bg-onyx text-nasty-cream" : "bg-slate-50 text-slate-900"
-        )}>
-          {/* Sidebar Overlay */}
+    <div className={clsx(
+      "min-h-screen flex flex-col transition-colors duration-300 relative",
+      isSyndicate ? "bg-onyx text-nasty-cream" : isDark ? "bg-slate-900 text-slate-50" : "bg-slate-50 text-slate-900"
+    )}>
+      {/* Sidebar Overlay */}
           <AnimatePresence>
             {isSidebarOpen && (
               <motion.div
@@ -233,7 +228,7 @@ export default function App() {
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                 className={clsx(
                   "fixed top-0 left-0 bottom-0 w-72 border-r flex flex-col z-50 transition-colors duration-300 shadow-2xl",
-                  theme === 'syndicate' ? "bg-onyx border-syndicate-red/30" : "bg-white border-slate-200"
+                  isSyndicate ? "bg-onyx border-syndicate-red/30" : isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
                 )}
               >
                 <div className="p-8">
@@ -241,20 +236,20 @@ export default function App() {
                     <div className="flex items-center gap-3">
                       <div className={clsx(
                         "p-2 rounded-xl",
-                        theme === 'syndicate' ? "bg-syndicate-red" : "bg-indigo-600"
+                        isSyndicate ? "bg-syndicate-red" : isDark ? "bg-indigo-500" : "bg-indigo-600"
                       )}>
                         <Target className="w-6 h-6 text-white" />
                       </div>
                       <span className={clsx(
                         "text-xl font-bold tracking-tight",
-                        theme === 'syndicate' ? "text-nasty-cream" : "text-slate-900"
+                        isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900"
                       )}>Dart Club 602</span>
                     </div>
                     <button 
                       onClick={() => setIsSidebarOpen(false)}
                       className={clsx(
                         "p-2 rounded-lg transition-colors",
-                        theme === 'syndicate' ? "hover:bg-syndicate-red/10 text-steel-gray" : "hover:bg-slate-100 text-slate-500"
+                        isSyndicate ? "hover:bg-syndicate-red/10 text-steel-gray" : isDark ? "hover:bg-slate-800 text-slate-400" : "hover:bg-slate-100 text-slate-500"
                       )}
                     >
                       <X className="w-5 h-5" />
@@ -316,8 +311,27 @@ export default function App() {
 
                 <div className={clsx(
                   "mt-auto p-8 border-t transition-colors duration-300",
-                  theme === 'syndicate' ? "border-syndicate-red/30" : "border-slate-100"
+                  isSyndicate ? "border-syndicate-red/30" : isDark ? "border-slate-800" : "border-slate-100"
                 )}>
+                  <div className="mb-6 flex items-center justify-between">
+                    <span className={clsx("text-sm font-medium", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-500")}>
+                      Theme
+                    </span>
+                    <button
+                      onClick={toggleTheme}
+                      disabled={isSyndicate}
+                      className={clsx(
+                        "p-2 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
+                        isSyndicate ? "bg-onyx/50 text-syndicate-red" :
+                        isDark ? "bg-slate-800 text-slate-300 hover:bg-slate-700" :
+                        "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      )}
+                      title={isSyndicate ? "Theme locked in Syndicate Mode" : `Switch to ${isLight ? 'Dark' : 'Light'} Mode`}
+                    >
+                      {isSyndicate ? <Skull className="w-5 h-5" /> : isLight ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                    </button>
+                  </div>
+
                   {user ? (
                     <>
                       <div className="flex items-center gap-4 mb-6">
@@ -326,18 +340,18 @@ export default function App() {
                           alt={player?.name}
                           className={clsx(
                             "w-10 h-10 rounded-xl object-cover",
-                            theme === 'syndicate' ? "stitched-red" : "ring-2 ring-slate-100"
+                            isSyndicate ? "stitched-red" : isDark ? "ring-2 ring-slate-800" : "ring-2 ring-slate-100"
                           )}
                           referrerPolicy="no-referrer"
                         />
                         <div className="flex-1 min-w-0">
                           <p className={clsx(
                             "text-sm font-bold truncate",
-                            theme === 'syndicate' ? "text-nasty-cream font-rocker" : "text-slate-900"
+                            isSyndicate ? "text-nasty-cream font-rocker" : isDark ? "text-slate-50" : "text-slate-900"
                           )}>{player?.name}</p>
                           <p className={clsx(
                             "text-xs capitalize",
-                            theme === 'syndicate' ? "text-steel-gray" : "text-slate-500"
+                            isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-500"
                           )}>{player?.role}</p>
                         </div>
                       </div>
@@ -345,9 +359,9 @@ export default function App() {
                         onClick={handleLogout}
                         className={clsx(
                           "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium",
-                          theme === 'syndicate'
+                          isSyndicate
                             ? "text-steel-gray hover:text-syndicate-red hover:bg-onyx/50"
-                            : "text-slate-500 hover:text-red-600 hover:bg-red-50"
+                            : isDark ? "text-slate-400 hover:text-red-400 hover:bg-red-500/10" : "text-slate-500 hover:text-red-600 hover:bg-red-50"
                         )}
                       >
                         <LogOut className="w-5 h-5" />
@@ -359,9 +373,9 @@ export default function App() {
                       onClick={handleLogin}
                       className={clsx(
                         "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium",
-                        theme === 'syndicate'
+                        isSyndicate
                           ? "bg-syndicate-red/20 text-syndicate-red hover:bg-syndicate-red/30"
-                          : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                          : isDark ? "bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30" : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
                       )}
                     >
                       <LogIn className="w-5 h-5" />
@@ -380,9 +394,9 @@ export default function App() {
               onClick={() => setIsSidebarOpen(true)}
               className={clsx(
                 "fixed top-6 left-6 z-30 p-3 rounded-2xl shadow-xl transition-all active:scale-95",
-                theme === 'syndicate' 
+                isSyndicate
                   ? "bg-syndicate-red text-white shadow-syndicate-red/20" 
-                  : "bg-white text-slate-900 border border-slate-200 shadow-slate-200/50"
+                  : isDark ? "bg-slate-800 text-slate-300 border border-slate-700 shadow-black/50" : "bg-white text-slate-900 border border-slate-200 shadow-slate-200/50"
               )}
             >
               <Menu className="w-6 h-6" />
@@ -419,14 +433,22 @@ export default function App() {
             </motion.div>
           </AnimatePresence>
         </main>
-      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AppContent />
       </ThemeProvider>
     </ErrorBoundary>
   );
 }
 
 function NavIcon({ icon, active, onClick, label, variant }: { icon: React.ReactNode, active: boolean, onClick: () => void, label: string, variant?: 'default' | 'syndicate' }) {
-  const { isSyndicate } = useTheme();
+  const { isSyndicate, isDark } = useTheme();
   
   return (
     <button
@@ -436,10 +458,10 @@ function NavIcon({ icon, active, onClick, label, variant }: { icon: React.ReactN
         active 
           ? isSyndicate
             ? "bg-syndicate-red text-nasty-cream shadow-[0_0_20px_rgba(139,0,0,0.4)] merrowed-border"
-            : "bg-indigo-600 text-white shadow-lg shadow-indigo-200 translate-x-1" 
+            : isDark ? "bg-indigo-500 text-white shadow-lg shadow-indigo-900 translate-x-1" : "bg-indigo-600 text-white shadow-lg shadow-indigo-200 translate-x-1"
           : isSyndicate
             ? "text-steel-gray hover:bg-onyx/50 hover:text-nasty-cream"
-            : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+            : isDark ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
       )}
     >
       {icon}

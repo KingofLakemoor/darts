@@ -9,7 +9,7 @@ import { clsx } from 'clsx';
 export function PlayerView() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const { isSyndicate } = useTheme();
+  const { isSyndicate, isDark } = useTheme();
 
   useEffect(() => {
     const q = query(collection(db, 'players'), orderBy('name', 'asc'));
@@ -28,15 +28,15 @@ export function PlayerView() {
         <div>
           <h1 className={clsx(
             "text-5xl font-bold tracking-tight mb-2",
-            isSyndicate ? "text-nasty-cream font-rocker" : "text-slate-900"
+            isSyndicate ? "text-nasty-cream font-rocker" : isDark ? "text-slate-50" : "text-slate-900"
           )}>Players</h1>
           <p className={clsx(
             "text-lg",
-            isSyndicate ? "text-steel-gray" : "text-slate-500"
+            isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-500"
           )}>The elite community of Dart Club 602.</p>
         </div>
         <div className="relative w-full md:w-72">
-          <Search className={clsx("absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5", isSyndicate ? "text-syndicate-red" : "text-slate-400")} />
+          <Search className={clsx("absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5", isSyndicate ? "text-syndicate-red" : isDark ? "text-slate-500" : "text-slate-400")} />
           <input
             type="text"
             placeholder="Search players..."
@@ -46,7 +46,7 @@ export function PlayerView() {
               "w-full pl-12 pr-4 py-3 outline-none transition-all shadow-sm rounded-2xl",
               isSyndicate 
                 ? "bg-onyx border border-syndicate-red/30 text-nasty-cream focus:ring-2 focus:ring-syndicate-red" 
-                : "bg-white border border-slate-200 text-slate-900 focus:ring-2 focus:ring-indigo-500"
+                : isDark ? "bg-slate-900 border border-slate-800 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border border-slate-200 text-slate-900 focus:ring-2 focus:ring-indigo-500"
             )}
           />
         </div>
@@ -58,7 +58,7 @@ export function PlayerView() {
             "p-8 rounded-3xl border transition-all group",
             isSyndicate 
               ? "bg-onyx border-syndicate-red/30 hover:border-syndicate-red hover:shadow-[0_0_30px_rgba(139,0,0,0.2)] merrowed-border" 
-              : "bg-white border-slate-200 shadow-sm hover:shadow-md"
+              : isDark ? "bg-slate-900 border-slate-800 shadow-black/20 hover:shadow-black/40 hover:border-slate-700" : "bg-white border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200"
           )}>
             <div className="flex items-center gap-5 mb-8">
               <div className="relative">
@@ -68,7 +68,7 @@ export function PlayerView() {
                     "w-16 h-16 rounded-2xl object-cover transition-all",
                     isSyndicate 
                       ? (player.isVested ? "stitched-red" : "border-2 border-steel-gray")
-                      : "ring-4 ring-slate-50 group-hover:ring-indigo-50"
+                      : isDark ? "ring-4 ring-slate-800 group-hover:ring-slate-700" : "ring-4 ring-slate-50 group-hover:ring-indigo-50"
                   )}
                   referrerPolicy="no-referrer"
                 />
@@ -81,12 +81,12 @@ export function PlayerView() {
               <div>
                 <h3 className={clsx(
                   "text-xl font-bold",
-                  isSyndicate ? "text-nasty-cream font-rocker" : "text-slate-900"
+                  isSyndicate ? "text-nasty-cream font-rocker" : isDark ? "text-slate-50" : "text-slate-900"
                 )}>{player.name}</h3>
                 <div className="flex items-center gap-2">
                   <span className={clsx(
                     "text-xs font-bold uppercase tracking-widest",
-                    isSyndicate ? "text-syndicate-red" : "text-indigo-600"
+                    isSyndicate ? "text-syndicate-red" : isDark ? "text-indigo-400" : "text-indigo-600"
                   )}>{player.role}</span>
                   {isSyndicate && player.isVested && (
                     <span className="text-[10px] font-black text-bounty-gold uppercase tracking-tighter">Vested</span>
@@ -97,9 +97,9 @@ export function PlayerView() {
 
             <div className="grid grid-cols-2 gap-4">
               <StatBox label="Wins" value={player.stats?.wins || 0} icon={<Trophy className="w-4 h-4 text-amber-500" />} />
-              <StatBox label="Avg Score" value={player.stats?.avgScore || 0} icon={<Target className={clsx("w-4 h-4", isSyndicate ? "text-syndicate-red" : "text-indigo-500")} />} />
+              <StatBox label="Avg Score" value={player.stats?.avgScore || 0} icon={<Target className={clsx("w-4 h-4", isSyndicate ? "text-syndicate-red" : isDark ? "text-indigo-400" : "text-indigo-500")} />} />
               <StatBox label="High Score" value={player.stats?.highScore || 0} icon={<TrendingUp className="w-4 h-4 text-emerald-500" />} />
-              <StatBox label="Losses" value={player.stats?.losses || 0} icon={<Users className="w-4 h-4 text-slate-400" />} />
+              <StatBox label="Losses" value={player.stats?.losses || 0} icon={<Users className={clsx("w-4 h-4", isDark ? "text-slate-500" : "text-slate-400")} />} />
             </div>
           </div>
         ))}
@@ -109,22 +109,22 @@ export function PlayerView() {
 }
 
 function StatBox({ label, value, icon }: { label: string, value: number | string, icon: React.ReactNode }) {
-  const { isSyndicate } = useTheme();
+  const { isSyndicate, isDark } = useTheme();
   return (
     <div className={clsx(
       "p-4 rounded-2xl border",
-      isSyndicate ? "bg-onyx/50 border-syndicate-red/20" : "bg-slate-50 border-slate-100"
+      isSyndicate ? "bg-onyx/50 border-syndicate-red/20" : isDark ? "bg-slate-800/50 border-slate-700/50" : "bg-slate-50 border-slate-100"
     )}>
       <div className="flex items-center gap-2 mb-1">
         {icon}
         <span className={clsx(
           "text-[10px] font-black uppercase tracking-widest",
-          isSyndicate ? "text-steel-gray" : "text-slate-400"
+          isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-400"
         )}>{label}</span>
       </div>
       <p className={clsx(
         "text-xl font-black tabular-nums",
-        isSyndicate ? "text-nasty-cream" : "text-slate-900"
+        isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900"
       )}>{value}</p>
     </div>
   );

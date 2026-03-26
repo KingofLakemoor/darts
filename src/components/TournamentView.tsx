@@ -6,6 +6,7 @@ import { motion } from 'motion/react';
 import { BracketView } from './BracketView';
 import { useTheme } from '../lib/ThemeContext';
 import { clsx } from 'clsx';
+import { useEffect } from 'react';
 
 interface Props {
   tournaments: Tournament[];
@@ -15,7 +16,17 @@ interface Props {
 
 export function TournamentView({ tournaments, season, venues }: Props) {
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
-  const { isSyndicate } = useTheme();
+  const { isSyndicate, isDark, setSyndicateMode } = useTheme();
+
+  useEffect(() => {
+    if (selectedTournament?.isSyndicate) {
+      setSyndicateMode(true);
+    } else {
+      setSyndicateMode(false);
+    }
+
+    return () => setSyndicateMode(false);
+  }, [selectedTournament, setSyndicateMode]);
 
   if (selectedTournament) {
     return (
@@ -24,7 +35,7 @@ export function TournamentView({ tournaments, season, venues }: Props) {
           onClick={() => setSelectedTournament(null)}
           className={clsx(
             "flex items-center gap-2 transition-colors font-medium",
-            isSyndicate ? "text-steel-gray hover:text-nasty-cream" : "text-slate-500 hover:text-slate-900"
+            isSyndicate ? "text-steel-gray hover:text-nasty-cream" : isDark ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-900"
           )}
         >
           <ChevronRight className="w-5 h-5 rotate-180" />
@@ -52,25 +63,25 @@ export function TournamentView({ tournaments, season, venues }: Props) {
           <div className="flex items-center gap-3 mb-4">
             <span className={clsx(
               "px-4 py-1 rounded-full text-sm font-bold tracking-wide uppercase",
-              isSyndicate ? "bg-syndicate-red/20 text-syndicate-red border border-syndicate-red/30" : "bg-indigo-100 text-indigo-700"
+              isSyndicate ? "bg-syndicate-red/20 text-syndicate-red border border-syndicate-red/30" : isDark ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30" : "bg-indigo-100 text-indigo-700"
             )}>
               {season?.name || 'No Active Season'}
             </span>
           </div>
           <h1 className={clsx(
             "text-5xl font-bold tracking-tight",
-            isSyndicate ? "text-nasty-cream font-rocker" : "text-slate-900"
+            isSyndicate ? "text-nasty-cream font-rocker" : isDark ? "text-slate-50" : "text-slate-900"
           )}>Tournaments</h1>
         </div>
         <div className="flex gap-4">
-          <StatCard label="Live Now" value={live.length.toString()} color={isSyndicate ? "text-syndicate-red" : "text-emerald-600"} />
-          <StatCard label="Upcoming" value={upcoming.length.toString()} color={isSyndicate ? "text-steel-gray" : "text-indigo-600"} />
+          <StatCard label="Live Now" value={live.length.toString()} color={isSyndicate ? "text-syndicate-red" : isDark ? "text-emerald-400" : "text-emerald-600"} />
+          <StatCard label="Upcoming" value={upcoming.length.toString()} color={isSyndicate ? "text-steel-gray" : isDark ? "text-indigo-400" : "text-indigo-600"} />
         </div>
       </header>
 
       {live.length > 0 && (
         <section>
-          <SectionHeader title="Live Events" icon={<Target className="w-6 h-6 text-emerald-600" />} />
+          <SectionHeader title="Live Events" icon={<Target className={clsx("w-6 h-6", isDark && !isSyndicate ? "text-emerald-400" : "text-emerald-600")} />} />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {live.map(t => (
               <TournamentCard key={t.id} tournament={t} venues={venues} onClick={() => setSelectedTournament(t)} />
@@ -80,7 +91,7 @@ export function TournamentView({ tournaments, season, venues }: Props) {
       )}
 
       <section>
-        <SectionHeader title="Upcoming Tournaments" icon={<Calendar className="w-6 h-6 text-indigo-600" />} />
+        <SectionHeader title="Upcoming Tournaments" icon={<Calendar className={clsx("w-6 h-6", isDark && !isSyndicate ? "text-indigo-400" : "text-indigo-600")} />} />
         {upcoming.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {upcoming.map(t => (
@@ -94,7 +105,7 @@ export function TournamentView({ tournaments, season, venues }: Props) {
 
       {completed.length > 0 && (
         <section>
-          <SectionHeader title="Recent Results" icon={<Trophy className="w-6 h-6 text-amber-600" />} />
+          <SectionHeader title="Recent Results" icon={<Trophy className={clsx("w-6 h-6", isDark && !isSyndicate ? "text-amber-500" : "text-amber-600")} />} />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {completed.map(t => (
               <TournamentCard key={t.id} tournament={t} venues={venues} onClick={() => setSelectedTournament(t)} />
@@ -107,15 +118,15 @@ export function TournamentView({ tournaments, season, venues }: Props) {
 }
 
 function StatCard({ label, value, color }: { label: string, value: string, color: string }) {
-  const { isSyndicate } = useTheme();
+  const { isSyndicate, isDark } = useTheme();
   return (
     <div className={clsx(
       "px-6 py-4 rounded-2xl border shadow-sm min-w-[140px]",
-      isSyndicate ? "bg-onyx border-syndicate-red/30" : "bg-white border-slate-200"
+      isSyndicate ? "bg-onyx border-syndicate-red/30" : isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
     )}>
       <p className={clsx(
         "text-xs font-bold uppercase tracking-wider mb-1",
-        isSyndicate ? "text-steel-gray" : "text-slate-500"
+        isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-500"
       )}>{label}</p>
       <p className={clsx(
         "text-3xl font-black",
@@ -127,13 +138,13 @@ function StatCard({ label, value, color }: { label: string, value: string, color
 }
 
 function SectionHeader({ title, icon }: { title: string, icon: React.ReactNode }) {
-  const { isSyndicate } = useTheme();
+  const { isSyndicate, isDark } = useTheme();
   return (
     <div className="flex items-center gap-3 mb-8">
       {icon}
       <h2 className={clsx(
         "text-2xl font-bold tracking-tight",
-        isSyndicate ? "text-nasty-cream font-rocker" : "text-slate-900"
+        isSyndicate ? "text-nasty-cream font-rocker" : isDark ? "text-slate-50" : "text-slate-900"
       )}>{title}</h2>
     </div>
   );
@@ -141,7 +152,7 @@ function SectionHeader({ title, icon }: { title: string, icon: React.ReactNode }
 
 function TournamentCard({ tournament, venues, onClick }: { tournament: Tournament, venues: Venue[], onClick: () => void }) {
   const date = new Date(tournament.date);
-  const { isSyndicate } = useTheme();
+  const { isSyndicate, isDark } = useTheme();
   const venue = venues.find(v => v.id === tournament.venueId);
   
   return (
@@ -152,16 +163,21 @@ function TournamentCard({ tournament, venues, onClick }: { tournament: Tournamen
         "w-full text-left p-8 rounded-3xl border transition-all duration-300 group relative overflow-hidden",
         isSyndicate 
           ? "bg-onyx border-syndicate-red/30 hover:border-syndicate-red hover:shadow-[0_0_30px_rgba(139,0,0,0.2)] merrowed-border" 
-          : clsx(
-              "bg-white hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/5",
-              tournament.isSyndicate ? "border-syndicate-red shadow-[0_0_15px_rgba(139,0,0,0.2)]" : "border-slate-200"
-            )
+          : isDark
+            ? clsx(
+                "bg-slate-900 hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/10",
+                tournament.isSyndicate ? "border-syndicate-red shadow-[0_0_15px_rgba(139,0,0,0.2)]" : "border-slate-800"
+              )
+            : clsx(
+                "bg-white hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/5",
+                tournament.isSyndicate ? "border-syndicate-red shadow-[0_0_15px_rgba(139,0,0,0.2)]" : "border-slate-200"
+              )
       )}
     >
       <div className="absolute top-0 right-0 p-6">
         <ChevronRight className={clsx(
           "w-6 h-6 transition-all group-hover:translate-x-1",
-          isSyndicate ? "text-syndicate-red group-hover:text-nasty-cream" : "text-slate-300 group-hover:text-indigo-500"
+          isSyndicate ? "text-syndicate-red group-hover:text-nasty-cream" : isDark ? "text-slate-600 group-hover:text-indigo-400" : "text-slate-300 group-hover:text-indigo-500"
         )} />
       </div>
 
@@ -169,40 +185,40 @@ function TournamentCard({ tournament, venues, onClick }: { tournament: Tournamen
         <div className="mb-6">
           <div className={clsx(
             "flex items-center gap-2 text-sm font-medium mb-3",
-            isSyndicate ? "text-steel-gray" : "text-slate-500"
+            isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-500"
           )}>
             <Clock className="w-4 h-4" />
             {format(date, 'MMM d, yyyy • h:mm a')}
           </div>
           <h3 className={clsx(
             "text-2xl font-bold transition-colors mb-2 flex items-center gap-2",
-            isSyndicate ? "text-nasty-cream font-rocker group-hover:text-syndicate-red" : "text-slate-900 group-hover:text-indigo-600"
+            isSyndicate ? "text-nasty-cream font-rocker group-hover:text-syndicate-red" : isDark ? "text-slate-50 group-hover:text-indigo-400" : "text-slate-900 group-hover:text-indigo-600"
           )}>
             {tournament.name}
             {tournament.isSyndicate && (
               <Skull className={clsx(
                 "w-5 h-5",
-                isSyndicate ? "text-syndicate-red" : "text-slate-400"
+                isSyndicate ? "text-syndicate-red" : isDark ? "text-slate-500" : "text-slate-400"
               )} />
             )}
           </h3>
           <p className={clsx(
             "font-medium capitalize",
-            isSyndicate ? "text-steel-gray" : "text-slate-500"
+            isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-500"
           )}>{tournament.type.replace('-', ' ')}</p>
         </div>
 
         <div className={clsx(
           "mt-auto flex items-center gap-6 pt-6 border-t",
-          isSyndicate ? "border-syndicate-red/20" : "border-slate-50"
+          isSyndicate ? "border-syndicate-red/20" : isDark ? "border-slate-800" : "border-slate-50"
         )}>
           <div className="flex items-center gap-2">
-            <Users className={clsx("w-5 h-5", isSyndicate ? "text-syndicate-red" : "text-slate-400")} />
-            <span className={clsx("text-sm font-bold", isSyndicate ? "text-nasty-cream" : "text-slate-700")}>{tournament.participants.length} Players</span>
+            <Users className={clsx("w-5 h-5", isSyndicate ? "text-syndicate-red" : isDark ? "text-slate-500" : "text-slate-400")} />
+            <span className={clsx("text-sm font-bold", isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-300" : "text-slate-700")}>{tournament.participants.length} Players</span>
           </div>
           <div className="flex items-center gap-2">
-            <MapPin className={clsx("w-5 h-5", isSyndicate ? "text-syndicate-red" : "text-slate-400")} />
-            <span className={clsx("text-sm font-bold truncate max-w-[120px]", isSyndicate ? "text-nasty-cream" : "text-slate-700")}>
+            <MapPin className={clsx("w-5 h-5", isSyndicate ? "text-syndicate-red" : isDark ? "text-slate-500" : "text-slate-400")} />
+            <span className={clsx("text-sm font-bold truncate max-w-[120px]", isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-300" : "text-slate-700")}>
               {venue?.name || 'Club 602'}
             </span>
           </div>
@@ -213,14 +229,14 @@ function TournamentCard({ tournament, venues, onClick }: { tournament: Tournamen
 }
 
 function EmptyState({ message }: { message: string }) {
-  const { isSyndicate } = useTheme();
+  const { isSyndicate, isDark } = useTheme();
   return (
     <div className={clsx(
       "py-16 rounded-3xl border border-dashed text-center",
-      isSyndicate ? "bg-onyx/50 border-syndicate-red/30" : "bg-white border-slate-300"
+      isSyndicate ? "bg-onyx/50 border-syndicate-red/30" : isDark ? "bg-slate-900/50 border-slate-700" : "bg-white border-slate-300"
     )}>
-      <Calendar className={clsx("w-12 h-12 mx-auto mb-4", isSyndicate ? "text-syndicate-red/50" : "text-slate-300")} />
-      <p className={clsx("font-medium", isSyndicate ? "text-steel-gray" : "text-slate-500")}>{message}</p>
+      <Calendar className={clsx("w-12 h-12 mx-auto mb-4", isSyndicate ? "text-syndicate-red/50" : isDark ? "text-slate-700" : "text-slate-300")} />
+      <p className={clsx("font-medium", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-500")}>{message}</p>
     </div>
   );
 }

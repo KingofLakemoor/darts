@@ -14,7 +14,7 @@ interface Props {
 }
 
 export function BracketView({ tournament }: Props) {
-  const { isSyndicate } = useTheme();
+  const { isSyndicate, isDark } = useTheme();
   const [matches, setMatches] = useState<Match[]>([]);
   const [players, setPlayers] = useState<Record<string, Player>>({});
   const [activeMatch, setActiveMatch] = useState<Match | null>(null);
@@ -89,22 +89,22 @@ export function BracketView({ tournament }: Props) {
     <div className="space-y-8">
       <div className={clsx(
         "p-8 rounded-3xl border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 transition-colors duration-300",
-        isSyndicate ? "bg-onyx border-syndicate-red/30 merrowed-border" : "bg-white border-slate-200"
+        isSyndicate ? "bg-onyx border-syndicate-red/30 merrowed-border" : isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
       )}>
         <div>
           <h2 className={clsx(
             "text-3xl font-bold mb-2",
-            isSyndicate ? "text-nasty-cream font-rocker" : "text-slate-900"
+            isSyndicate ? "text-nasty-cream font-rocker" : isDark ? "text-slate-50" : "text-slate-900"
           )}>{tournament.name}</h2>
           <div className={clsx(
             "flex items-center gap-4 font-medium",
-            isSyndicate ? "text-steel-gray" : "text-slate-500"
+            isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-500"
           )}>
             <span className="flex items-center gap-2">
-              <Users className={clsx("w-5 h-5", isSyndicate ? "text-syndicate-red" : "text-slate-400")} />
+              <Users className={clsx("w-5 h-5", isSyndicate ? "text-syndicate-red" : isDark ? "text-slate-500" : "text-slate-400")} />
               {tournament.participants.length} Players
             </span>
-            <span className={clsx("w-1 h-1 rounded-full", isSyndicate ? "bg-syndicate-red/50" : "bg-slate-300")} />
+            <span className={clsx("w-1 h-1 rounded-full", isSyndicate ? "bg-syndicate-red/50" : isDark ? "bg-slate-600" : "bg-slate-300")} />
             <span className="capitalize">{tournament.status}</span>
           </div>
         </div>
@@ -119,7 +119,7 @@ export function BracketView({ tournament }: Props) {
                     "px-8 py-3 rounded-2xl font-bold transition-all shadow-lg",
                     isSyndicate 
                       ? "bg-syndicate-red text-nasty-cream shadow-syndicate-red/20" 
-                      : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100"
+                      : isDark ? "bg-indigo-500 text-white hover:bg-indigo-600" : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100"
                   )}
                 >
                   Join Tournament
@@ -133,7 +133,7 @@ export function BracketView({ tournament }: Props) {
                     "px-8 py-3 rounded-2xl font-bold transition-all shadow-lg disabled:opacity-50",
                     isSyndicate 
                       ? "bg-syndicate-red text-nasty-cream shadow-syndicate-red/20" 
-                      : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-100"
+                      : isDark ? "bg-emerald-500 text-white hover:bg-emerald-600" : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-100"
                   )}
                 >
                   <Play className="w-5 h-5" />
@@ -146,15 +146,15 @@ export function BracketView({ tournament }: Props) {
           {tournament.status !== 'upcoming' && (
             <div className={clsx(
               "flex p-1 rounded-xl",
-              isSyndicate ? "bg-onyx/50 border border-syndicate-red/20" : "bg-slate-100"
+              isSyndicate ? "bg-onyx/50 border border-syndicate-red/20" : isDark ? "bg-slate-800" : "bg-slate-100"
             )}>
               <button 
                 onClick={() => setViewMode('bracket')}
                 className={clsx(
                   "p-2 rounded-lg transition-all",
                   viewMode === 'bracket' 
-                    ? (isSyndicate ? "bg-syndicate-red text-nasty-cream shadow-sm" : "bg-white text-indigo-600 shadow-sm") 
-                    : (isSyndicate ? "text-steel-gray hover:text-nasty-cream" : "text-slate-500 hover:text-slate-900")
+                    ? (isSyndicate ? "bg-syndicate-red text-nasty-cream shadow-sm" : isDark ? "bg-slate-700 text-indigo-400 shadow-sm" : "bg-white text-indigo-600 shadow-sm")
+                    : (isSyndicate ? "text-steel-gray hover:text-nasty-cream" : isDark ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-900")
                 )}
               >
                 <Layout className="w-5 h-5" />
@@ -164,8 +164,8 @@ export function BracketView({ tournament }: Props) {
                 className={clsx(
                   "p-2 rounded-lg transition-all",
                   viewMode === 'list' 
-                    ? (isSyndicate ? "bg-syndicate-red text-nasty-cream shadow-sm" : "bg-white text-indigo-600 shadow-sm") 
-                    : (isSyndicate ? "text-steel-gray hover:text-nasty-cream" : "text-slate-500 hover:text-slate-900")
+                    ? (isSyndicate ? "bg-syndicate-red text-nasty-cream shadow-sm" : isDark ? "bg-slate-700 text-indigo-400 shadow-sm" : "bg-white text-indigo-600 shadow-sm")
+                    : (isSyndicate ? "text-steel-gray hover:text-nasty-cream" : isDark ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-900")
                 )}
               >
                 <List className="w-5 h-5" />
@@ -178,30 +178,30 @@ export function BracketView({ tournament }: Props) {
       {tournament.status === 'upcoming' && (
         <div className={clsx(
           "p-8 rounded-3xl border transition-colors duration-300",
-          isSyndicate ? "bg-onyx border-syndicate-red/30 merrowed-border" : "bg-white border-slate-200"
+          isSyndicate ? "bg-onyx border-syndicate-red/30 merrowed-border" : isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
         )}>
           <h3 className={clsx(
             "text-xl font-bold mb-6",
-            isSyndicate ? "text-nasty-cream font-rocker" : "text-slate-900"
+            isSyndicate ? "text-nasty-cream font-rocker" : isDark ? "text-slate-50" : "text-slate-900"
           )}>Registered Players</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {tournament.participants.map(uid => (
               <div key={uid} className={clsx(
                 "flex flex-col items-center gap-3 p-4 rounded-2xl border transition-colors duration-300",
-                isSyndicate ? "bg-onyx/50 border-syndicate-red/20" : "bg-slate-50 border-slate-100"
+                isSyndicate ? "bg-onyx/50 border-syndicate-red/20" : isDark ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-100"
               )}>
                 <img 
                   src={players[uid]?.photoURL || `https://ui-avatars.com/api/?name=${players[uid]?.name}`}
                   className={clsx(
                     "w-12 h-12 rounded-xl object-cover ring-2",
-                    isSyndicate ? "ring-syndicate-red/30" : "ring-white",
+                    isSyndicate ? "ring-syndicate-red/30" : isDark ? "ring-slate-800" : "ring-white",
                     isSyndicate && players[uid]?.isVested && "stitched-red"
                   )}
                   referrerPolicy="no-referrer"
                 />
                 <span className={clsx(
                   "text-sm font-bold text-center truncate w-full",
-                  isSyndicate ? "text-nasty-cream font-rocker" : "text-slate-900"
+                  isSyndicate ? "text-nasty-cream font-rocker" : isDark ? "text-slate-50" : "text-slate-900"
                 )}>
                   {players[uid]?.name || 'Loading...'}
                 </span>
@@ -264,14 +264,14 @@ function MatchCard({ match, players, hasAdminPrivileges, onScore }: {
 }) {
   const p1 = players[match.player1Id];
   const p2 = players[match.player2Id];
-  const { isSyndicate } = useTheme();
+  const { isSyndicate, isDark } = useTheme();
 
   return (
     <div className={clsx(
       "rounded-2xl border shadow-sm overflow-hidden group transition-all duration-300",
       isSyndicate 
         ? "bg-onyx border-syndicate-red/30 hover:border-syndicate-red merrowed-border" 
-        : "bg-white border-slate-200 hover:border-indigo-300 shadow-sm"
+        : isDark ? "bg-slate-900 border-slate-800 hover:border-slate-700 shadow-black/20" : "bg-white border-slate-200 hover:border-indigo-300 shadow-sm"
     )}>
       <div className="p-4 space-y-3">
         <PlayerRow 
@@ -282,7 +282,7 @@ function MatchCard({ match, players, hasAdminPrivileges, onScore }: {
         />
         <div className={clsx(
           "h-px",
-          isSyndicate ? "bg-syndicate-red/10" : "bg-slate-50"
+          isSyndicate ? "bg-syndicate-red/10" : isDark ? "bg-slate-800" : "bg-slate-50"
         )} />
         <PlayerRow 
           player={p2} 
@@ -299,7 +299,7 @@ function MatchCard({ match, players, hasAdminPrivileges, onScore }: {
             "w-full py-3 text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2",
             isSyndicate 
               ? "bg-syndicate-red/10 text-syndicate-red hover:bg-syndicate-red hover:text-nasty-cream font-rocker" 
-              : "bg-slate-50 hover:bg-indigo-600 hover:text-white text-slate-600"
+              : isDark ? "bg-slate-800 hover:bg-indigo-500 hover:text-white text-slate-400" : "bg-slate-50 hover:bg-indigo-600 hover:text-white text-slate-600"
           )}
         >
           <Play className="w-3 h-3" />
@@ -310,21 +310,21 @@ function MatchCard({ match, players, hasAdminPrivileges, onScore }: {
       {match.status === 'live' && (
         <div className={clsx(
           "py-2 text-center flex items-center justify-center gap-2",
-          isSyndicate ? "bg-syndicate-red/10" : "bg-emerald-50"
+          isSyndicate ? "bg-syndicate-red/10" : isDark ? "bg-emerald-500/10" : "bg-emerald-50"
         )}>
           <span className="relative flex h-2 w-2">
             <span className={clsx(
               "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
-              isSyndicate ? "bg-syndicate-red" : "bg-emerald-400"
+              isSyndicate ? "bg-syndicate-red" : isDark ? "bg-emerald-400" : "bg-emerald-400"
             )}></span>
             <span className={clsx(
               "relative inline-flex rounded-full h-2 w-2",
-              isSyndicate ? "bg-syndicate-red" : "bg-emerald-500"
+              isSyndicate ? "bg-syndicate-red" : isDark ? "bg-emerald-500" : "bg-emerald-500"
             )}></span>
           </span>
           <span className={clsx(
             "text-[10px] font-black uppercase tracking-widest",
-            isSyndicate ? "text-syndicate-red font-mono" : "text-emerald-600"
+            isSyndicate ? "text-syndicate-red font-mono" : isDark ? "text-emerald-400" : "text-emerald-600"
           )}>Live Match</span>
         </div>
       )}
@@ -332,11 +332,11 @@ function MatchCard({ match, players, hasAdminPrivileges, onScore }: {
       {match.status === 'completed' && (
         <div className={clsx(
           "py-2 text-center",
-          isSyndicate ? "bg-syndicate-red/5" : "bg-slate-50"
+          isSyndicate ? "bg-syndicate-red/5" : isDark ? "bg-slate-800/50" : "bg-slate-50"
         )}>
           <span className={clsx(
             "text-[10px] font-black uppercase tracking-widest",
-            isSyndicate ? "text-syndicate-red/60 font-mono" : "text-slate-400"
+            isSyndicate ? "text-syndicate-red/60 font-mono" : isDark ? "text-slate-500" : "text-slate-400"
           )}>Final Result</span>
         </div>
       )}
@@ -350,7 +350,7 @@ function PlayerRow({ player, score, isWinner, isPlaceholder }: {
   isWinner: boolean,
   isPlaceholder: boolean
 }) {
-  const { isSyndicate } = useTheme();
+  const { isSyndicate, isDark } = useTheme();
 
   return (
     <div className={clsx(
@@ -379,8 +379,8 @@ function PlayerRow({ player, score, isWinner, isPlaceholder }: {
         <span className={clsx(
           "text-sm font-bold truncate",
           isWinner 
-            ? (isSyndicate ? "text-nasty-cream font-rocker" : "text-slate-900") 
-            : (isSyndicate ? "text-steel-gray font-rocker" : "text-slate-500")
+            ? (isSyndicate ? "text-nasty-cream font-rocker" : isDark ? "text-slate-50" : "text-slate-900")
+            : (isSyndicate ? "text-steel-gray font-rocker" : isDark ? "text-slate-400" : "text-slate-500")
         )}>
           {player?.name || 'TBD'}
         </span>
@@ -388,8 +388,8 @@ function PlayerRow({ player, score, isWinner, isPlaceholder }: {
       <span className={clsx(
         "text-lg font-black tabular-nums",
         isWinner 
-          ? (isSyndicate ? "text-syndicate-red font-mono" : "text-indigo-600") 
-          : (isSyndicate ? "text-steel-gray/30 font-mono" : "text-slate-400")
+          ? (isSyndicate ? "text-syndicate-red font-mono" : isDark ? "text-indigo-400" : "text-indigo-600")
+          : (isSyndicate ? "text-steel-gray/30 font-mono" : isDark ? "text-slate-600" : "text-slate-400")
       )}>
         {score}
       </span>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Target, Shield, Trophy, Skull, Crosshair, Zap } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useTheme } from '../lib/ThemeContext';
 
 interface Player {
   id: string;
@@ -13,6 +14,13 @@ interface Player {
 }
 
 export function SyndicateScorer() {
+  const { setSyndicateMode } = useTheme();
+
+  useEffect(() => {
+    setSyndicateMode(true);
+    return () => setSyndicateMode(false);
+  }, [setSyndicateMode]);
+
   const [view, setView] = useState<'scoreboard' | 'bracket'>('scoreboard');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [players, setPlayers] = useState<Player[]>([
