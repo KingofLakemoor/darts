@@ -35,9 +35,15 @@ export function TournamentView({ tournaments, season, venues }: Props) {
     );
   }
 
-  const upcoming = tournaments.filter(t => t.status === 'upcoming');
-  const live = tournaments.filter(t => t.status === 'live');
-  const completed = tournaments.filter(t => t.status === 'completed');
+  const upcoming = tournaments
+    .filter(t => t.status === 'upcoming')
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const live = tournaments
+    .filter(t => t.status === 'live')
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const completed = tournaments
+    .filter(t => t.status === 'completed')
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <div className="space-y-12 max-w-6xl mx-auto">
@@ -146,7 +152,10 @@ function TournamentCard({ tournament, venues, onClick }: { tournament: Tournamen
         "w-full text-left p-8 rounded-3xl border transition-all duration-300 group relative overflow-hidden",
         isSyndicate 
           ? "bg-onyx border-syndicate-red/30 hover:border-syndicate-red hover:shadow-[0_0_30px_rgba(139,0,0,0.2)] merrowed-border" 
-          : "bg-white border-slate-200 hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/5"
+          : clsx(
+              "bg-white hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/5",
+              tournament.isSyndicate ? "border-syndicate-red shadow-[0_0_15px_rgba(139,0,0,0.2)]" : "border-slate-200"
+            )
       )}
     >
       <div className="absolute top-0 right-0 p-6">
