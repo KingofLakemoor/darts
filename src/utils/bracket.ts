@@ -1,4 +1,34 @@
-import { Match, GameType, X01Config, CricketConfig } from '../types';
+export type GameType = 'X01' | 'Cricket';
+
+export interface X01Config {
+  startScore: 301 | 501 | 701;
+  sets: number;
+  legs: number;
+  inRule: 'single' | 'double' | 'triple';
+  outRule: 'single' | 'double' | 'triple';
+}
+
+export interface CricketConfig {
+  mode: 'Standard' | 'Cut Throat';
+  random: boolean;
+}
+
+export interface Match {
+  id: string;
+  tournamentId: string;
+  player1Id: string;
+  player2Id: string;
+  score1: number; // Sets won
+  score2: number; // Sets won
+  legs1: number; // Legs won in current set
+  legs2: number; // Legs won in current set
+  winnerId?: string;
+  status: 'pending' | 'live' | 'completed';
+  round: number;
+  position: number;
+  gameType: GameType;
+  gameConfig: X01Config | CricketConfig;
+}
 
 export function generateBracket(
   participants: string[], 
