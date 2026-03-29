@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Target, Shield, Trophy, Skull, Crosshair, Zap, RotateCcw } from 'lucide-react';
+import { Target, Shield, Trophy, Skull, Crosshair, Zap } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useTheme } from '../lib/ThemeContext';
 
@@ -28,13 +28,10 @@ export function SyndicateScorer() {
     { id: '2', name: 'PROSPECT_04', score: 301, isVested: false, hasBounty: false, history: [] }
   ]);
   const [activePlayerIndex, setActivePlayerIndex] = useState(0);
+  const [input, setInput] = useState('');
   const [vaultProgress, setVaultProgress] = useState(65);
   const [showWinner, setShowWinner] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
-
-  const [currentDarts, setCurrentDarts] = useState<number[]>([]);
-  const [modifier, setModifier] = useState<'single' | 'double' | 'triple'>('single');
-  const [history, setHistory] = useState<any[]>([]);
 
   const activePlayer = players[activePlayerIndex];
 
@@ -46,76 +43,39 @@ export function SyndicateScorer() {
     }, 500);
   };
 
-  const handleDart = (value: number) => {
-    if (showWinner) return;
+  const handleInput = (val: string) => {
+    if (val === 'DEL') {
+      setInput(input.slice(0, -1));
+    } else if (val === 'ENTER') {
+      const points = parseInt(input) || 0;
+      if (points > 180) return;
 
-    let points = value;
-    if (modifier === 'double') points *= 2;
-    if (modifier === 'triple') points = value === 25 ? 50 : points * 3;
-
-    const stateSnapshot = {
-      players: JSON.parse(JSON.stringify(players)),
-      activePlayerIndex,
-      currentDarts: [...currentDarts],
-    };
-    setHistory(prev => [...prev, stateSnapshot]);
-
-    const newScore = activePlayer.score - points;
-    const newDarts = [...currentDarts, points];
-
-    // Screen shake effect on significant throws or bust
-    if (points >= 40 || newScore <= 1) {
+      const newScore = activePlayer.score - points;
+      
+      // Screen shake effect
       setIsShaking(true);
       setTimeout(() => setIsShaking(false), 300);
-    }
 
-    const canWin = modifier === 'double';
-
-    if (newScore === 0 && canWin) {
-      // Win
-      const updatedPlayers = [...players];
-      updatedPlayers[activePlayerIndex] = {
-        ...activePlayer,
-        score: 0,
-        history: [...activePlayer.history, points]
-      };
-      setPlayers(updatedPlayers);
-      setCurrentDarts([]);
-      setShowWinner(true);
-      setVaultProgress(100);
-    } else if (newScore <= 1) {
-      // Bust
-      setCurrentDarts([]);
-      setActivePlayerIndex((activePlayerIndex + 1) % players.length);
-    } else {
-      // Normal throw
-      const updatedPlayers = [...players];
-      updatedPlayers[activePlayerIndex] = {
-        ...activePlayer,
-        score: newScore,
-        history: [...activePlayer.history, points]
-      };
-      setPlayers(updatedPlayers);
-      
-      setVaultProgress(prev => Math.min(100, prev + (points / 100)));
-
-      if (newDarts.length === 3) {
-        setCurrentDarts([]);
-        setActivePlayerIndex((activePlayerIndex + 1) % players.length);
-      } else {
-        setCurrentDarts(newDarts);
+      if (newScore === 0) {
+        setShowWinner(true);
       }
-    }
-    setModifier('single');
-  };
 
-  const handleUndo = () => {
-    if (history.length === 0 || showWinner) return;
-    const lastState = history[history.length - 1];
-    setPlayers(lastState.players);
-    setActivePlayerIndex(lastState.activePlayerIndex);
-    setCurrentDarts(lastState.currentDarts);
-    setHistory(prev => prev.slice(0, -1));
+      const updatedPlayers = [...players];
+      updatedPlayers[activePlayerIndex] = {
+        ...activePlayer,
+        score: newScore < 0 ? activePlayer.score : newScore,
+        history: [...activePlayer.history, points]
+      };
+
+      setPlayers(updatedPlayers);
+      setInput('');
+      setActivePlayerIndex((activePlayerIndex + 1) % players.length);
+      
+      // Update vault progress slightly on score
+      setVaultProgress(prev => Math.min(100, prev + (points / 100)));
+    } else {
+      if (input.length < 3) setInput(input + val);
+    }
   };
 
   return (
@@ -263,65 +223,40 @@ export function SyndicateScorer() {
 
             {/* Keypad */}
             <div className="lg:col-span-4">
-              <div className="merrowed-border p-8 leather-bg h-full flex flex-col">
+              <div className="merrowed-border p-8 leather-bg h-full">
                 <div className="mb-8">
-                  <label className="font-rocker text-xs text-syndicate-red uppercase tracking-widest mb-2 block">Current Turn</label>
-
-                  <div className="flex items-center justify-between gap-2 mb-4">
-                    <div className="flex gap-1 flex-1">
-                      {[0, 1, 2].map(i => (
-                        <div
-                          key={i}
-                          className="h-12 flex-1 rounded-sm border-2 bg-onyx border-steel-gray flex items-center justify-center font-mono text-lg font-bold text-nasty-cream shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)]"
-                        >
-                          {currentDarts?.[i] !== undefined ? currentDarts[i] : ''}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="w-16 h-12 flex items-center justify-center bg-syndicate-red/10 border-2 border-syndicate-red/30 rounded-sm font-mono text-2xl font-black text-syndicate-red">
-                      {currentDarts.reduce((a, b) => a + b, 0)}
-                    </div>
+                  <label className="font-rocker text-xs text-syndicate-red uppercase tracking-widest mb-2 block">Enter Score</label>
+                  <div className="bg-onyx border-2 border-steel-gray p-4 font-mono text-4xl text-center text-bounty-gold shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)]">
+                    {input || '000'}
                   </div>
                 </div>
 
-                <div className="flex-1">
-                    <div className="grid grid-cols-5 gap-2 h-full">
-                      <div className="col-span-4 grid grid-cols-4 gap-2">
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map(n => (
-                          <button
-                            key={n}
-                            onClick={() => handleDart(n)}
-                            className={clsx(
-                              "h-12 md:h-14 font-rocker text-lg transition-all active:scale-95 bg-onyx border-2 text-nasty-cream shadow-[0_4px_0_#1a1a1a] active:shadow-none active:translate-y-1",
-                              modifier !== 'single' ? "border-syndicate-red/50" : "border-steel-gray hover:border-syndicate-red"
-                            )}
-                          >
-                            {modifier === 'double' ? `D${n}` : modifier === 'triple' ? `T${n}` : n}
-                          </button>
-                        ))}
-                      </div>
-                      <div className="grid grid-cols-1 gap-2">
-                        <button onClick={() => handleDart(0)} className="h-12 md:h-14 font-rocker text-sm transition-all active:scale-95 bg-onyx border-2 border-steel-gray text-nasty-cream hover:border-syndicate-red shadow-[0_4px_0_#1a1a1a] active:shadow-none active:translate-y-1">OUT</button>
-                        <button onClick={() => handleDart(25)} className="h-12 md:h-14 font-rocker text-sm transition-all active:scale-95 bg-onyx border-2 border-steel-gray text-nasty-cream hover:border-syndicate-red shadow-[0_4px_0_#1a1a1a] active:shadow-none active:translate-y-1">SB</button>
-                        <button
-                          onClick={() => setModifier(modifier === 'double' ? 'single' : 'double')}
-                          className={clsx(
-                            "h-12 md:h-14 font-rocker text-lg transition-all active:scale-95 border-2 shadow-[0_4px_0_#1a1a1a] active:shadow-none active:translate-y-1",
-                            modifier === 'double' ? "bg-syndicate-red border-syndicate-red text-nasty-cream shadow-[0_4px_0_#4a0000]" : "bg-onyx border-steel-gray text-nasty-cream hover:border-syndicate-red"
-                          )}
-                        >D</button>
-                        <button
-                          onClick={() => setModifier(modifier === 'triple' ? 'single' : 'triple')}
-                          className={clsx(
-                            "h-12 md:h-14 font-rocker text-lg transition-all active:scale-95 border-2 shadow-[0_4px_0_#1a1a1a] active:shadow-none active:translate-y-1",
-                            modifier === 'triple' ? "bg-syndicate-red border-syndicate-red text-nasty-cream shadow-[0_4px_0_#4a0000]" : "bg-onyx border-steel-gray text-nasty-cream hover:border-syndicate-red"
-                          )}
-                        >T</button>
-                        <button onClick={handleUndo} className="h-12 md:h-14 transition-all active:scale-95 bg-onyx border-2 border-steel-gray text-nasty-cream hover:border-syndicate-red flex items-center justify-center shadow-[0_4px_0_#1a1a1a] active:shadow-none active:translate-y-1">
-                          <RotateCcw className="w-5 h-5 mx-auto" />
-                        </button>
-                      </div>
-                    </div>
+                <div className="grid grid-cols-3 gap-4">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 'DEL', 0, 'ENTER'].map((btn) => (
+                    <button
+                      key={btn}
+                      onClick={() => handleInput(btn.toString())}
+                      className={clsx(
+                        "h-16 font-rocker text-xl transition-all active:scale-95",
+                        btn === 'ENTER' 
+                          ? "col-span-1 bg-syndicate-red text-nasty-cream border-2 border-syndicate-red shadow-[0_4px_0_#4a0000] active:shadow-none active:translate-y-1" 
+                          : "bg-onyx border-2 border-steel-gray text-nasty-cream hover:border-syndicate-red"
+                      )}
+                    >
+                      {btn}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mt-8 space-y-4">
+                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-steel-gray">
+                    <span>Last Dart</span>
+                    <span className="text-nasty-cream">Double 16</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-steel-gray">
+                    <span>Avg Score</span>
+                    <span className="text-nasty-cream">42.5</span>
+                  </div>
                 </div>
               </div>
             </div>
