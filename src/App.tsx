@@ -269,15 +269,15 @@ function AppContent() {
                       onClick={() => { setActiveTab('scorer'); setIsSidebarOpen(false); }}
                       label="Offline Scoreboard"
                     />
-                    <button
-                      onClick={() => { setActiveTab('syndicate'); setIsSidebarOpen(false); }}
-                      className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-200 font-semibold text-sm text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                    >
-                      <Skull className="w-5 h-5" />
-                      Syndicate Mode
-                    </button>
                     {user && (
                       <>
+                        <NavIcon
+                          icon={<Skull className="w-5 h-5" />}
+                          active={activeTab === 'syndicate'}
+                          onClick={() => { setActiveTab('syndicate'); setIsSidebarOpen(false); }}
+                          label="Syndicate Mode"
+                          variant="syndicate"
+                        />
                         <NavIcon
                           icon={<Trophy className="w-5 h-5" />}
                           active={activeTab === 'tournaments'}
