@@ -143,7 +143,7 @@ export function SyndicateScorer() {
       </AnimatePresence>
 
       {/* The Vault Progress Bar */}
-      <div className="max-w-4xl mx-auto mb-12">
+      <div className="max-w-4xl mx-auto mb-4 md:mb-12">
         <div className="flex justify-between items-end mb-2">
           <span className="font-rocker text-xs tracking-widest text-syndicate-red uppercase">The Vault</span>
           <div className="flex items-center gap-4">
@@ -177,12 +177,12 @@ export function SyndicateScorer() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8"
+            className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-8"
           >
             {/* Scoreboard Content ... */}
-            <div className="lg:col-span-8 space-y-6">
-              <div className="flex items-center justify-between mb-8">
-                <h1 className="font-rocker text-4xl md:text-6xl tracking-tighter text-nasty-cream drop-shadow-lg">
+            <div className="lg:col-span-8 space-y-2 md:space-y-6">
+              <div className="flex items-center justify-between mb-2 md:mb-8">
+                <h1 className="font-rocker text-2xl md:text-6xl tracking-tighter text-nasty-cream drop-shadow-lg">
                   301 <span className="text-syndicate-red">SPRINT</span>
                 </h1>
                 <div className="flex items-center gap-2 bg-syndicate-red/20 px-4 py-2 border border-syndicate-red/40 rounded-sm">
@@ -191,7 +191,7 @@ export function SyndicateScorer() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-2 md:gap-6">
                 {players.map((player, idx) => (
                   <motion.div
                     key={player.id}
@@ -201,7 +201,7 @@ export function SyndicateScorer() {
                       x: isShaking && activePlayerIndex === idx ? [0, -10, 10, -10, 10, 0] : 0
                     }}
                     className={clsx(
-                      "merrowed-border p-6 leather-bg relative overflow-hidden",
+                      "merrowed-border p-3 md:p-6 leather-bg relative overflow-hidden",
                       activePlayerIndex === idx && "border-syndicate-red shadow-[0_0_30px_rgba(139,0,0,0.3)]",
                       player.hasBounty && activePlayerIndex === idx && "border-bounty-gold shadow-[0_0_40px_rgba(212,175,55,0.4)]"
                     )}
@@ -212,16 +212,16 @@ export function SyndicateScorer() {
                       </div>
                     )}
 
-                    <div className="flex items-center gap-4 mb-6">
+                    <div className="flex flex-col md:flex-row items-center text-center md:text-left gap-2 md:gap-4 mb-2 md:mb-6">
                       <div className={clsx(
-                        "w-16 h-16 rounded-full flex items-center justify-center border-4",
+                        "w-10 h-10 md:w-16 md:h-16 rounded-full flex items-center justify-center border-2 md:border-4",
                         player.isVested ? "border-syndicate-red stitched-red" : "border-steel-gray"
                       )}>
-                        {player.isVested ? <Shield className="w-8 h-8 text-syndicate-red" /> : <Skull className="w-8 h-8 text-steel-gray" />}
+                        {player.isVested ? <Shield className="w-5 h-5 md:w-8 md:h-8 text-syndicate-red" /> : <Skull className="w-5 h-5 md:w-8 md:h-8 text-steel-gray" />}
                       </div>
                       <div>
                         <h3 className={clsx(
-                          "font-rocker text-2xl tracking-wide",
+                          "font-rocker text-sm md:text-2xl tracking-wide leading-tight",
                           player.isVested ? "text-nasty-cream" : "text-steel-gray"
                         )}>
                           {player.name}
@@ -237,7 +237,7 @@ export function SyndicateScorer() {
                         key={player.score}
                         initial={{ y: -20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        className="font-mono text-8xl font-black text-center tracking-tighter"
+                        className="font-mono text-5xl md:text-8xl font-black text-center tracking-tighter"
                       >
                         {player.score}
                       </motion.div>
@@ -249,9 +249,9 @@ export function SyndicateScorer() {
                       )}
                     </div>
 
-                    <div className="mt-6 flex flex-wrap gap-2 justify-center">
+                    <div className="mt-2 md:mt-6 flex flex-wrap gap-1 md:gap-2 justify-center">
                       {player.history.slice(-5).map((s, i) => (
-                        <span key={i} className="font-mono text-xs bg-onyx px-2 py-1 border border-steel-gray/30 text-steel-gray">
+                        <span key={i} className="font-mono text-[10px] md:text-xs bg-onyx px-1 md:px-2 py-0.5 md:py-1 border border-steel-gray/30 text-steel-gray">
                           {s}
                         </span>
                       ))}
@@ -263,8 +263,8 @@ export function SyndicateScorer() {
 
             {/* Keypad */}
             <div className="lg:col-span-4">
-              <div className="merrowed-border p-8 leather-bg h-full flex flex-col">
-                <div className="mb-8">
+              <div className="merrowed-border p-4 md:p-8 leather-bg h-full flex flex-col">
+                <div className="mb-4 md:mb-8">
                   <label className="font-rocker text-xs text-syndicate-red uppercase tracking-widest mb-2 block">Current Turn</label>
 
                   <div className="flex items-center justify-between gap-2 mb-4">

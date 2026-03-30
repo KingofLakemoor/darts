@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert';
-import { generateBracket } from './bracket.ts';
+import { generateBracket } from './bracket';
 
 const tournamentId = 'test-tournament';
 const gameType = 'X01';
