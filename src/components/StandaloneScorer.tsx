@@ -12,6 +12,7 @@ export function StandaloneScorer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [gameMode, setGameMode] = useState<GameMode>('X01');
   const [startScore, setStartScore] = useState<X01StartScore>(301);
+  const [x01OutRule, setX01OutRule] = useState<'single' | 'double'>('double');
   const [player1Name, setPlayer1Name] = useState('Player 1');
   const [player2Name, setPlayer2Name] = useState('Player 2');
 
@@ -96,7 +97,7 @@ export function StandaloneScorer() {
     const newDarts = [...currentDarts, points];
 
     // Double out rule
-    const canWin = (modifier as string) === 'double' || (value === 25 && (modifier as string) === 'double');
+    const canWin = x01OutRule === 'single' || (modifier as string) === 'double' || (value === 25 && (modifier as string) === 'double');
 
     if (newScore === 0 && canWin) {
       if (activePlayer === 1) {
@@ -109,7 +110,7 @@ export function StandaloneScorer() {
         setWinner(player2Name);
       }
       setCurrentDarts([]);
-    } else if (newScore <= 1) {
+    } else if (newScore < 0 || (newScore === 1 && x01OutRule === 'double')) {
       // Bust
       setCurrentDarts([]);
       if (activePlayer === 1) {
@@ -511,6 +512,29 @@ export function StandaloneScorer() {
                         )}
                       >
                         {score}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-4 mt-4 border-t border-slate-800/50">
+                  <label className={clsx(
+                    "block text-sm font-bold mb-4 uppercase tracking-wider",
+                    isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-500"
+                  )}>Out Rule</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    {(['single', 'double'] as const).map(rule => (
+                      <button
+                        key={rule}
+                        onClick={() => setX01OutRule(rule)}
+                        className={clsx(
+                          "py-3 rounded-xl font-bold transition-all border",
+                          x01OutRule === rule
+                            ? (isSyndicate ? "bg-syndicate-red/20 border-syndicate-red text-syndicate-red" : isDark ? "bg-indigo-500/20 border-indigo-500 text-indigo-400" : "bg-indigo-50 border-indigo-600 text-indigo-700")
+                            : (isSyndicate ? "bg-black/40 border-syndicate-red/10 text-nasty-cream/40" : isDark ? "bg-slate-800 border-slate-700 text-slate-400 hover:border-indigo-500/50" : "bg-white border-slate-200 text-slate-500 hover:border-indigo-200")
+                        )}
+                      >
+                        {rule === 'single' ? 'Single Out' : 'Double Out'}
                       </button>
                     ))}
                   </div>
