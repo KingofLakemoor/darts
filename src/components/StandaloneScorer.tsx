@@ -112,11 +112,14 @@ export function StandaloneScorer() {
       setCurrentDarts([]);
     } else if (newScore < 0 || (newScore === 1 && x01OutRule === 'double')) {
       // Bust
+      const turnPoints = currentDarts.reduce((a, b) => a + b, 0);
       setCurrentDarts([]);
       if (activePlayer === 1) {
+        setScore1(score1 + turnPoints);
         setTotalDarts1(prev => prev + 3);
         setActivePlayer(2);
       } else {
+        setScore2(score2 + turnPoints);
         setTotalDarts2(prev => prev + 3);
         setActivePlayer(1);
       }

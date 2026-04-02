@@ -220,6 +220,12 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
       setActivePlayer(activePlayer === 1 ? 2 : 1);
     } else if (newScore <= 1) {
       // Bust
+      const turnPoints = currentDarts.reduce((a, b) => a + b, 0);
+      if (activePlayer === 1) {
+        setScore1(score1 + turnPoints);
+      } else {
+        setScore2(score2 + turnPoints);
+      }
       setCurrentDarts([]);
       setTotalDarts1(prev => activePlayer === 1 ? prev + 3 : prev);
       setTotalDarts2(prev => activePlayer === 2 ? prev + 3 : prev);

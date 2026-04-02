@@ -85,6 +85,14 @@ export function SyndicateScorer() {
       setVaultProgress(100);
     } else if (newScore <= 1) {
       // Bust
+      const turnPoints = currentDarts.reduce((a, b) => a + b, 0);
+      const updatedPlayers = [...players];
+      updatedPlayers[activePlayerIndex] = {
+        ...activePlayer,
+        score: activePlayer.score + turnPoints,
+        history: activePlayer.history.slice(0, activePlayer.history.length - currentDarts.length)
+      };
+      setPlayers(updatedPlayers);
       setCurrentDarts([]);
       setActivePlayerIndex((activePlayerIndex + 1) % players.length);
     } else {
