@@ -212,7 +212,7 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
       setTotalDarts1(prev => activePlayer === 1 ? prev + newDarts.length : prev);
       setTotalDarts2(prev => activePlayer === 2 ? prev + newDarts.length : prev);
       setActivePlayer(activePlayer === 1 ? 2 : 1);
-    } else if (newScore <= 1) {
+    } else if (newScore < 0 || (newScore === 1 && x01Config.outRule !== 'single') || (newScore === 0 && !canWin)) {
       // Bust
       const turnPoints = currentDarts.reduce((a, b) => a + b, 0);
       if (activePlayer === 1) {
