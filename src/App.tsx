@@ -17,7 +17,8 @@ import {
   orderBy,
   getDocs,
   updateDoc,
-  deleteDoc
+  deleteDoc,
+  writeBatch
 } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { Player, Tournament, Season, Match, X01Config, Venue } from './types';
@@ -97,23 +98,26 @@ function AppContent() {
               isPlaceholder: false
             };
             
-            await setDoc(doc(db, 'players', firebaseUser.uid), mergedPlayer);
+            const batch = writeBatch(db);
+            batch.set(doc(db, 'players', firebaseUser.uid), mergedPlayer);
             
             // Update tournament participants
             const tournamentsRef = collection(db, 'tournaments');
-            const tournamentsSnapshot = await getDocs(tournamentsRef);
-            for (const tDoc of tournamentsSnapshot.docs) {
+            const qTournaments = query(tournamentsRef, where('participants', 'array-contains', placeholderDoc.id));
+            const tournamentsSnapshot = await getDocs(qTournaments);
+
+            tournamentsSnapshot.docs.forEach((tDoc) => {
               const tData = tDoc.data() as Tournament;
-              if (tData.participants?.includes(placeholderDoc.id)) {
-                const newParticipants = tData.participants.map(pId => 
-                  pId === placeholderDoc.id ? firebaseUser.uid : pId
-                );
-                await updateDoc(doc(db, 'tournaments', tDoc.id), { participants: newParticipants });
-              }
-            }
+              const newParticipants = tData.participants.map(pId =>
+                pId === placeholderDoc.id ? firebaseUser.uid : pId
+              );
+              batch.update(doc(db, 'tournaments', tDoc.id), { participants: newParticipants });
+            });
             
             // Delete placeholder
-            await deleteDoc(doc(db, 'players', placeholderDoc.id));
+            batch.delete(doc(db, 'players', placeholderDoc.id));
+
+            await batch.commit();
             
             setPlayer(mergedPlayer);
           } else {
