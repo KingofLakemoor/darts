@@ -121,7 +121,7 @@ export function SyndicateScorer() {
       setCurrentDarts([]);
       setShowWinner(true);
       setVaultProgress(100);
-    } else if (newScore <= 1) {
+    } else if (newScore < 0 || newScore === 1 || (newScore === 0 && !canWin)) {
       // Bust
       const turnPoints = currentDarts.reduce((a, b) => a + b, 0);
       const updatedPlayers = [...players];

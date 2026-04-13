@@ -134,7 +134,7 @@ export function StandaloneScorer() {
         setWinner(player2Name);
       }
       setCurrentDarts([]);
-    } else if (newScore < 0 || (newScore === 1 && x01OutRule === 'double')) {
+    } else if (newScore < 0 || (newScore === 1 && x01OutRule === 'double') || (newScore === 0 && !canWin)) {
       // Bust
       const turnPoints = currentDarts.reduce((a, b) => a + b, 0);
       setCurrentDarts([]);
