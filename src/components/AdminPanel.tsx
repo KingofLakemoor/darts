@@ -109,12 +109,19 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
   };
 
   const createTournament = async () => {
-    if (!newTournament.name || !newTournament.seasonId) return;
-    await addDoc(collection(db, 'tournaments'), {
+    if (!newTournament.name) return;
+
+    const tournamentData: any = {
       ...newTournament,
       status: 'upcoming',
       participants: []
-    });
+    };
+
+    if (!tournamentData.seasonId) {
+      delete tournamentData.seasonId;
+    }
+
+    await addDoc(collection(db, 'tournaments'), tournamentData);
     setNewTournament({
       name: '',
       date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
@@ -479,7 +486,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                       : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
                   )}
                 >
-                  <option value="">Select Season</option>
+                  <option value="">None (One-Off Event)</option>
                   {seasons.map(s => (
                     <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
@@ -715,7 +722,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
 
             <button
               onClick={createTournament}
-              disabled={!newTournament.name || !newTournament.seasonId}
+              disabled={!newTournament.name}
               className={clsx(
                 "w-full py-4 rounded-2xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg mt-4",
                 isSyndicate 
@@ -1351,14 +1358,14 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                 <div>
                   <label className="block text-sm font-bold mb-2 opacity-60">Season</label>
                   <select
-                    value={editingTournament.seasonId}
+                    value={editingTournament.seasonId || ''}
                     onChange={(e) => setEditingTournament({ ...editingTournament, seasonId: e.target.value })}
                     className={clsx(
                       "w-full px-4 py-3 rounded-xl border outline-none transition-all",
                       isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : isDark ? "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
                     )}
                   >
-                    <option value="">Select Season</option>
+                    <option value="">None (One-Off Event)</option>
                     {seasons.map(s => (
                       <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
