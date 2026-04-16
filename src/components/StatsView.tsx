@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Player } from '../types';
-import { TrendingUp, Search, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
+import { Player, Season, Tournament, Match } from '../types';
+import { TrendingUp, Search, ArrowUpRight, ArrowDownRight, Minus, Calendar } from 'lucide-react';
 import { useTheme } from '../lib/ThemeContext';
 import { clsx } from 'clsx';
 
 export function StatsView() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string>('all');
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [matches, setMatches] = useState<Match[]>([]);
+
   const { isSyndicate, isDark } = useTheme();
 
   useEffect(() => {
@@ -18,9 +23,95 @@ export function StatsView() {
     });
   }, []);
 
-  const filteredPlayers = players.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    const q = query(collection(db, 'seasons'), orderBy('startDate', 'desc'));
+    return onSnapshot(q, (snapshot) => {
+      const fetchedSeasons = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Season));
+      setSeasons(fetchedSeasons);
+      const activeSeason = fetchedSeasons.find(s => s.active);
+      if (activeSeason && selectedSeasonId === 'all') {
+        setSelectedSeasonId(activeSeason.id);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    const q = query(collection(db, 'tournaments'));
+    return onSnapshot(q, (snapshot) => {
+      setTournaments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tournament)));
+    });
+  }, []);
+
+  useEffect(() => {
+    const q = query(collection(db, 'matches'), where('status', '==', 'completed'));
+    return onSnapshot(q, (snapshot) => {
+      setMatches(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Match)));
+    });
+  }, []);
+
+  // Calculate season-specific stats
+  const calculatedPlayers = React.useMemo(() => {
+    if (selectedSeasonId === 'all') {
+      return players;
+    }
+
+    const seasonTournaments = tournaments.filter(t => t.seasonId === selectedSeasonId);
+    const seasonTournamentIds = new Set(seasonTournaments.map(t => t.id));
+    const seasonMatches = matches.filter(m => seasonTournamentIds.has(m.tournamentId));
+
+    return players.map(player => {
+      const pMatches = seasonMatches.filter(m => m.player1Id === player.uid || m.player2Id === player.uid);
+
+      let seasonWins = 0;
+      let seasonLosses = 0;
+      let seasonWonLegs = 0;
+      let seasonTotalLegs = 0;
+
+      pMatches.forEach(m => {
+        if (m.winnerId === player.uid) {
+          seasonWins++;
+        } else if (m.winnerId) {
+          seasonLosses++;
+        }
+
+        if (m.player1Id === player.uid) {
+          seasonWonLegs += (m.legs1 || 0);
+          seasonTotalLegs += (m.legs1 || 0) + (m.legs2 || 0);
+        } else {
+          seasonWonLegs += (m.legs2 || 0);
+          seasonTotalLegs += (m.legs1 || 0) + (m.legs2 || 0);
+        }
+      });
+
+      // Override stats with season stats
+      return {
+        ...player,
+        stats: {
+          ...player.stats,
+          wins: seasonWins,
+          losses: seasonLosses,
+          wonLegs: seasonWonLegs,
+          totalLegs: seasonTotalLegs,
+        }
+      };
+    });
+  }, [players, selectedSeasonId, tournaments, matches]);
+
+  const filteredPlayers = calculatedPlayers
+    .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) => {
+       // Primary sort: Wins. Secondary sort: Win percentage.
+       const aWins = a.stats?.wins || 0;
+       const bWins = b.stats?.wins || 0;
+       if (aWins !== bWins) {
+           return bWins - aWins; // Descending
+       }
+       const aMatches = aWins + (a.stats?.losses || 0);
+       const bMatches = bWins + (b.stats?.losses || 0);
+       const aWinPerc = aMatches > 0 ? aWins / aMatches : 0;
+       const bWinPerc = bMatches > 0 ? bWins / bMatches : 0;
+       return bWinPerc - aWinPerc;
+    });
 
   return (
     <div className="space-y-8 max-w-[1400px] mx-auto">
@@ -35,20 +126,43 @@ export function StatsView() {
             isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-500"
           )}>Detailed performance metrics for all club members.</p>
         </div>
-        <div className="relative w-full md:w-72">
-          <Search className={clsx("absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5", isSyndicate ? "text-syndicate-red" : isDark ? "text-slate-500" : "text-slate-400")} />
-          <input
-            type="text"
-            placeholder="Search players..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={clsx(
-              "w-full pl-12 pr-4 py-3 outline-none transition-all shadow-sm rounded-2xl",
-              isSyndicate 
-                ? "bg-onyx border border-syndicate-red/30 text-nasty-cream focus:ring-2 focus:ring-syndicate-red" 
-                : isDark ? "bg-slate-900 border border-slate-800 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border border-slate-200 text-slate-900 focus:ring-2 focus:ring-indigo-500"
-            )}
-          />
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+          <div className="relative w-full sm:w-64">
+            <Calendar className={clsx("absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5", isSyndicate ? "text-syndicate-red" : isDark ? "text-slate-500" : "text-slate-400")} />
+            <select
+              value={selectedSeasonId}
+              onChange={(e) => setSelectedSeasonId(e.target.value)}
+              className={clsx(
+                "w-full pl-12 pr-10 py-3 outline-none transition-all shadow-sm rounded-2xl appearance-none cursor-pointer",
+                isSyndicate
+                  ? "bg-onyx border border-syndicate-red/30 text-nasty-cream focus:ring-2 focus:ring-syndicate-red"
+                  : isDark ? "bg-slate-900 border border-slate-800 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border border-slate-200 text-slate-900 focus:ring-2 focus:ring-indigo-500"
+              )}
+            >
+              <option value="all">All Time History</option>
+              {seasons.map(season => (
+                <option key={season.id} value={season.id}>
+                  {season.name} {season.active ? '(Active)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="relative w-full sm:w-64">
+            <Search className={clsx("absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5", isSyndicate ? "text-syndicate-red" : isDark ? "text-slate-500" : "text-slate-400")} />
+            <input
+              type="text"
+              placeholder="Search players..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={clsx(
+                "w-full pl-12 pr-4 py-3 outline-none transition-all shadow-sm rounded-2xl",
+                isSyndicate
+                  ? "bg-onyx border border-syndicate-red/30 text-nasty-cream focus:ring-2 focus:ring-syndicate-red"
+                  : isDark ? "bg-slate-900 border border-slate-800 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border border-slate-200 text-slate-900 focus:ring-2 focus:ring-indigo-500"
+              )}
+            />
+          </div>
         </div>
       </header>
 
@@ -67,6 +181,8 @@ export function StatsView() {
                   "p-6 font-black text-[10px] uppercase tracking-widest sticky left-0 z-10",
                   isSyndicate ? "bg-onyx text-steel-gray" : isDark ? "bg-slate-900 text-slate-400" : "bg-slate-50 text-slate-400"
                 )}>Player</th>
+                <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-400")}>M. Won</th>
+                <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-400")}>M. Lost</th>
                 <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-400")}>Won Legs %</th>
                 <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-400")}>Avg</th>
                 <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-400")}>9-Avg</th>
@@ -112,6 +228,12 @@ export function StatsView() {
                         />
                         <span className={clsx("font-bold whitespace-nowrap", isSyndicate ? "text-nasty-cream font-rocker" : isDark ? "text-slate-50" : "text-slate-900")}>{player.name}</span>
                       </div>
+                    </td>
+                    <td className="p-6 text-center">
+                      <span className={clsx("text-sm font-black", isSyndicate ? "text-nasty-cream" : isDark ? "text-emerald-400" : "text-emerald-600")}>{stats?.wins || 0}</span>
+                    </td>
+                    <td className="p-6 text-center">
+                      <span className={clsx("text-sm font-black", isSyndicate ? "text-syndicate-red" : isDark ? "text-red-400" : "text-red-600")}>{stats?.losses || 0}</span>
                     </td>
                     <td className="p-6 text-center">
                       <span className={clsx("text-sm font-black", isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900")}>{wonLegsPerc}%</span>
