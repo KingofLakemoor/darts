@@ -1,3 +1,4 @@
+import { X01HistoryState, CricketHistoryState } from "../types";
 import React, { useState } from 'react';
 import { useTheme } from '../lib/ThemeContext';
 import { clsx } from 'clsx';
@@ -21,8 +22,8 @@ export function StandaloneScorer() {
   const [score1, setScore1] = useState<number>(301);
   const [score2, setScore2] = useState<number>(301);
   const [currentDarts, setCurrentDarts] = useState<number[]>([]);
-  const [x01History, setX01History] = useState<any[]>([]);
-  const [cricketHistory, setCricketHistory] = useState<any[]>([]);
+  const [x01History, setX01History] = useState<X01HistoryState[]>([]);
+  const [cricketHistory, setCricketHistory] = useState<CricketHistoryState[]>([]);
   const [modifier, setModifier] = useState<'single' | 'double' | 'triple'>('single');
   const [totalDarts1, setTotalDarts1] = useState(0);
   const [totalDarts2, setTotalDarts2] = useState(0);

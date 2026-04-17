@@ -100,3 +100,31 @@ export interface Season {
   endDate?: string;
   active: boolean;
 }
+
+export interface X01HistoryState {
+  score1: number;
+  score2: number;
+  currentDarts: number[];
+  totalDarts1: number;
+  totalDarts2: number;
+  activePlayer: 1 | 2;
+  sets1?: number;
+  legs1?: number;
+  legs2?: number;
+  sets2?: number;
+}
+
+export interface CricketHistoryState {
+  cricketMarks1: Record<number, number>;
+  cricketMarks2: Record<number, number>;
+  cricketPoints1: number;
+  cricketPoints2: number;
+  currentDarts: number[];
+  activePlayer: 1 | 2;
+}
+
+export interface SyndicateHistoryState {
+  activePlayerIndex: number;
+  players: unknown[];
+  currentDarts: number[];
+}
