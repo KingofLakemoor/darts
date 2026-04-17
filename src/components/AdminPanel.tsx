@@ -11,7 +11,8 @@ import {
   where,
   getDocs,
   serverTimestamp,
-  writeBatch
+  writeBatch,
+  setDoc
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Tournament, Season, Player, GameType, X01Config, CricketConfig, Venue } from '../types';
@@ -194,7 +195,9 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
     
     const displayName = `${newPlayer.firstName} ${newPlayer.lastName.charAt(0).toUpperCase()}.`;
     
-    await addDoc(collection(db, 'players'), {
+    const newDocRef = doc(collection(db, 'players'));
+    await setDoc(newDocRef, {
+      uid: newDocRef.id,
       firstName: newPlayer.firstName,
       lastName: newPlayer.lastName,
       email: newPlayer.email,
