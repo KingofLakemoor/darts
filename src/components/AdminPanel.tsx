@@ -21,6 +21,7 @@ import { generateBracket } from '../utils/bracket';
 import { getSeededParticipants } from '../utils/seeding';
 import { shuffleArray } from '../utils/random';
 import { format } from 'date-fns';
+import { AdminTournamentEditor } from './AdminTournamentEditor';
 import { useTheme } from '../lib/ThemeContext';
 import { motion } from 'motion/react';
 
@@ -337,6 +338,19 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
       });
     }
   };
+
+  if (editingTournament) {
+    return (
+      <AdminTournamentEditor
+        tournamentId={editingTournament.id}
+        onBack={() => setEditingTournament(null)}
+        tournaments={tournaments}
+        seasons={seasons}
+        venues={venues}
+        players={players}
+      />
+    );
+  }
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
@@ -919,57 +933,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
           </div>
         </section>
 
-        {/* Bracket Generation */}
-        {selectedTournamentId && (
-          <section className={clsx(
-            "p-8 rounded-3xl border shadow-sm",
-            isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
-          )}>
-            <div className="flex items-center gap-3 mb-8">
-              <div className={clsx(
-                "p-2 rounded-xl",
-                isSyndicate ? "bg-syndicate-red/20 text-syndicate-red" : isDark ? "bg-purple-500/20 text-purple-400" : "bg-purple-100 text-purple-600"
-              )}>
-                <Trophy className="w-6 h-6" />
-              </div>
-              <h2 className={clsx(
-                "text-xl font-bold",
-                isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900"
-              )}>
-                Generate Bracket
-              </h2>
-            </div>
 
-            <div className="flex flex-col md:flex-row gap-6 items-end">
-              <div className="flex-1">
-                <p className={clsx(
-                  "text-sm font-medium",
-                  isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-600"
-                )}>
-                  Brackets are automatically seeded based on season rankings (wins). If there are no current season rankings, or if this is a one-off tournament, the bracket will be randomized.
-                </p>
-              </div>
-              
-              <button
-                onClick={() => handleGenerateBracket(selectedTournamentId)}
-                className={clsx(
-                  "px-8 py-3 rounded-xl font-bold text-white transition-all shadow-lg",
-                  isSyndicate ? "bg-syndicate-red hover:bg-red-700" : isDark ? "bg-indigo-500 hover:bg-indigo-600" : "bg-indigo-600 hover:bg-indigo-700"
-                )}
-              >
-                Generate & Start Tournament
-              </button>
-            </div>
-            
-            <p className={clsx(
-              "mt-4 text-sm",
-              isSyndicate ? "text-nasty-cream/40" : isDark ? "text-slate-400" : "text-slate-500"
-            )}>
-              This will generate the first round of matches and set the tournament status to 'Live'.
-              Existing matches for this tournament will be deleted.
-            </p>
-          </section>
-        )}
       </div>
 
       {/* Venue Management */}
@@ -1407,296 +1371,9 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
         </div>
       )}
 
-      {editingTournament && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className={clsx(
-            "w-full max-w-2xl p-8 rounded-3xl border shadow-2xl max-h-[90vh] overflow-y-auto",
-            isSyndicate ? "bg-onyx border-syndicate-red/30 text-nasty-cream" : isDark ? "bg-slate-900 border-slate-800 text-slate-50" : "bg-white border-slate-200 text-slate-900"
-          )}>
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-bold">Edit Tournament</h2>
-              <button 
-                onClick={() => setEditingTournament(null)}
-                className="p-2 rounded-xl hover:bg-black/10 transition-colors"
-              >
-                <XCircle className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-bold mb-2 opacity-60">Tournament Name</label>
-                  <input
-                    type="text"
-                    value={editingTournament.name}
-                    onChange={(e) => setEditingTournament({ ...editingTournament, name: e.target.value })}
-                    className={clsx(
-                      "w-full px-4 py-3 rounded-xl border outline-none transition-all",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : isDark ? "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
-                    )}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold mb-2 opacity-60">Date & Time</label>
-                  <input
-                    type="datetime-local"
-                    value={editingTournament.date}
-                    onChange={(e) => setEditingTournament({ ...editingTournament, date: e.target.value })}
-                    className={clsx(
-                      "w-full px-4 py-3 rounded-xl border outline-none transition-all",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : isDark ? "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
-                    )}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-bold mb-2 opacity-60">Season</label>
-                  <select
-                    value={editingTournament.seasonId || ''}
-                    onChange={(e) => setEditingTournament({ ...editingTournament, seasonId: e.target.value })}
-                    className={clsx(
-                      "w-full px-4 py-3 rounded-xl border outline-none transition-all",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : isDark ? "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
-                    )}
-                  >
-                    <option value="">None (One-Off Event)</option>
-                    {seasons.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold mb-2 opacity-60">Venue</label>
-                  <select
-                    value={editingTournament.venueId}
-                    onChange={(e) => setEditingTournament({ ...editingTournament, venueId: e.target.value })}
-                    className={clsx(
-                      "w-full px-4 py-3 rounded-xl border outline-none transition-all",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : isDark ? "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
-                    )}
-                  >
-                    <option value="">Select Venue</option>
-                    {venues.map(v => (
-                      <option key={v.id} value={v.id}>{v.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-bold mb-2 opacity-60">Tournament Type</label>
-                  <select
-                    value={editingTournament.type}
-                    onChange={(e) => {
-                      const newType = e.target.value as 'single-elimination' | 'double-elimination' | 'round-robin';
-                      setEditingTournament({
-                        ...editingTournament,
-                        type: newType,
-                        ...(newType === 'round-robin' && !editingTournament.roundRobinConfig ? {
-                          roundRobinConfig: { podSize: 4, gamesPerPlayer: 3 }
-                        } : {})
-                      });
-                    }}
-                    className={clsx(
-                      "w-full px-4 py-3 rounded-xl border outline-none transition-all",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : isDark ? "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
-                    )}
-                  >
-                    <option value="single-elimination">Single Elimination</option>
-                    <option value="double-elimination">Double Elimination</option>
-                    <option value="round-robin">Round Robin</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold mb-2 opacity-60">Status</label>
-                  <select
-                    value={editingTournament.status}
-                    onChange={(e) => setEditingTournament({ ...editingTournament, status: e.target.value as 'upcoming' | 'live' | 'completed' })}
-                    className={clsx(
-                      "w-full px-4 py-3 rounded-xl border outline-none transition-all",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : isDark ? "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
-                    )}
-                  >
-                    <option value="upcoming">Upcoming</option>
-                    <option value="live">Live</option>
-                    <option value="completed">Completed</option>
-                  </select>
-                </div>
-              </div>
-
-              {editingTournament.type === 'round-robin' && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold mb-2 opacity-60">Pod Size</label>
-                    <input
-                      type="number"
-                      min="2"
-                      value={editingTournament.roundRobinConfig?.podSize || 4}
-                      onChange={(e) => {
-                        const size = parseInt(e.target.value) || 2;
-                        setEditingTournament({
-                          ...editingTournament,
-                          roundRobinConfig: {
-                            podSize: size,
-                            gamesPerPlayer: Math.max(1, size - 1)
-                          }
-                        });
-                      }}
-                      className={clsx(
-                        "w-full px-4 py-3 rounded-xl border outline-none transition-all",
-                        isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
-                      )}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold mb-2 opacity-60">Games Per Player</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={editingTournament.roundRobinConfig?.gamesPerPlayer || 3}
-                      onChange={(e) => setEditingTournament({
-                        ...editingTournament,
-                        roundRobinConfig: {
-                          podSize: editingTournament.roundRobinConfig?.podSize || 4,
-                          gamesPerPlayer: parseInt(e.target.value) || 1
-                        }
-                      })}
-                      className={clsx(
-                        "w-full px-4 py-3 rounded-xl border outline-none transition-all",
-                        isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
-                      )}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-bold mb-4 opacity-60">Game Type</label>
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    onClick={() => handleEditGameTypeChange('X01')}
-                    className={clsx(
-                      "py-3 rounded-xl border font-bold transition-all",
-                      editingTournament.gameType === 'X01'
-                        ? (isSyndicate ? "bg-syndicate-red border-syndicate-red text-white" : isDark ? "bg-indigo-500 border-indigo-500 text-white" : "bg-indigo-600 border-indigo-600 text-white")
-                        : (isSyndicate ? "bg-black/20 border-syndicate-red/10 text-nasty-cream/40" : isDark ? "bg-slate-800 border-slate-700 text-slate-400" : "bg-white border-slate-200 text-slate-400")
-                    )}
-                  >
-                    X01
-                  </button>
-                  <button
-                    onClick={() => handleEditGameTypeChange('Cricket')}
-                    className={clsx(
-                      "py-3 rounded-xl border font-bold transition-all",
-                      editingTournament.gameType === 'Cricket'
-                        ? (isSyndicate ? "bg-syndicate-red border-syndicate-red text-white" : isDark ? "bg-indigo-500 border-indigo-500 text-white" : "bg-indigo-600 border-indigo-600 text-white")
-                        : (isSyndicate ? "bg-black/20 border-syndicate-red/10 text-nasty-cream/40" : isDark ? "bg-slate-800 border-slate-700 text-slate-400" : "bg-white border-slate-200 text-slate-400")
-                    )}
-                  >
-                    Cricket
-                  </button>
-                </div>
-              </div>
-
-              {/* Game Config */}
-              <div className={clsx(
-                "p-6 rounded-2xl border",
-                isSyndicate ? "bg-black/20 border-syndicate-red/10" : isDark ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-100"
-              )}>
-                {editingTournament.gameType === 'X01' ? (
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-xs font-bold mb-2 opacity-60">Start Score</label>
-                      <select
-                        value={(editingTournament.gameConfig as X01Config).startScore}
-                        onChange={(e) => setEditingTournament({
-                          ...editingTournament,
-                          gameConfig: { ...editingTournament.gameConfig, startScore: parseInt(e.target.value) as 301 | 501 | 701 }
-                        })}
-                        className={clsx(
-                      "w-full px-3 py-2 rounded-lg border text-sm",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200"
-                        )}
-                      >
-                        <option value="301">301</option>
-                        <option value="501">501</option>
-                        <option value="701">701</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold mb-2 opacity-60">Out Rule</label>
-                      <select
-                        value={(editingTournament.gameConfig as X01Config).outRule}
-                        onChange={(e) => setEditingTournament({
-                          ...editingTournament,
-                          gameConfig: { ...(editingTournament.gameConfig as X01Config), outRule: e.target.value as 'single' | 'double' | 'triple' }
-                        })}
-                        className={clsx(
-                      "w-full px-3 py-2 rounded-lg border text-sm",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200"
-                        )}
-                      >
-                        <option value="single">Single Out</option>
-                        <option value="double">Double Out</option>
-                        <option value="master">Master Out</option>
-                      </select>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-bold opacity-60">Mode</label>
-                      <select
-                        value={(editingTournament.gameConfig as CricketConfig).mode}
-                        onChange={(e) => setEditingTournament({
-                          ...editingTournament,
-                          gameConfig: { ...(editingTournament.gameConfig as CricketConfig), mode: e.target.value as 'Standard' | 'Cut Throat' }
-                        })}
-                        className={clsx(
-                      "px-3 py-2 rounded-lg border text-sm",
-                      isSyndicate ? "bg-black/40 border-syndicate-red/20 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200"
-                        )}
-                      >
-                        <option value="Standard">Standard</option>
-                        <option value="Cut Throat">Cut Throat</option>
-                      </select>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-4 pt-4">
-                <button
-                  onClick={() => setEditingTournament(null)}
-                  className={clsx(
-                    "flex-1 py-4 rounded-2xl font-bold transition-all",
-                    isSyndicate ? "bg-black/40 text-nasty-cream hover:bg-black/60" : isDark ? "bg-slate-800 text-slate-400 hover:bg-slate-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  )}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={updateTournament}
-                  className={clsx(
-                    "flex-1 py-4 rounded-2xl font-bold transition-all shadow-lg",
-                    isSyndicate ? "bg-syndicate-red text-white hover:bg-red-700" : isDark ? "bg-indigo-500 text-white hover:bg-indigo-600" : "bg-indigo-600 text-white hover:bg-indigo-700"
-                  )}
-                >
-                  Save Changes
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
-
 function clsx(...classes: (string | undefined | null | false)[]) {
   return classes.filter(Boolean).join(' ');
 }
