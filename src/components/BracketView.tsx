@@ -49,7 +49,10 @@ export function BracketView({ tournament }: Props) {
       tournament.participants, 
       tournament.id,
       tournament.gameType,
-      tournament.gameConfig
+      tournament.gameConfig,
+      [],
+      tournament.type,
+      tournament.roundRobinConfig
     );
     
     generatedMatches.forEach(match => {
@@ -211,7 +214,7 @@ export function BracketView({ tournament }: Props) {
         </div>
       )}
 
-      {tournament.status !== 'upcoming' && viewMode === 'bracket' && (
+      {tournament.status !== 'upcoming' && viewMode === 'bracket' && tournament.type !== 'round-robin' && (
         <div className="overflow-x-auto pb-8">
           <div className="flex gap-12 min-w-max p-4">
             {rounds.map(round => (
@@ -236,6 +239,30 @@ export function BracketView({ tournament }: Props) {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {tournament.status !== 'upcoming' && viewMode === 'bracket' && tournament.type === 'round-robin' && (
+        <div className="space-y-8">
+          {rounds.map(pod => (
+            <div key={pod} className="space-y-4">
+              <h3 className={clsx(
+                "text-lg font-bold px-2",
+                isSyndicate ? "text-syndicate-red font-rocker" : isDark ? "text-slate-200" : "text-slate-800"
+              )}>Pod {pod}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {matches.filter(m => m.round === pod).sort((a, b) => a.position - b.position).map(match => (
+                  <MatchCard
+                    key={match.id}
+                    match={match}
+                    players={players}
+                    hasAdminPrivileges={hasAdminPrivileges}
+                    onScore={() => setActiveMatch(match)}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

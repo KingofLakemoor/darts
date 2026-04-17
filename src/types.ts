@@ -64,6 +64,10 @@ export interface Tournament {
   winnerId?: string;
   seasonId?: string;
   isSyndicate?: boolean;
+  roundRobinConfig?: {
+    podSize: number;
+    gamesPerPlayer: number;
+  };
 }
 
 export interface Venue {

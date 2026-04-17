@@ -67,6 +67,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
     gameType: GameType;
     gameConfig: X01Config | CricketConfig;
     isSyndicate: boolean;
+    roundRobinConfig?: { podSize: number; gamesPerPlayer: number };
   }>({
     name: '',
     date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
@@ -261,7 +262,9 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
       tournamentId,
       tournament.gameType,
       tournament.gameConfig,
-      seededParticipants
+      seededParticipants,
+      tournament.type,
+      tournament.roundRobinConfig
     );
 
     // Delete existing matches for this tournament
@@ -515,27 +518,114 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
               </div>
             </div>
 
-            <div>
-              <label className={clsx(
-                "block text-sm font-bold mb-2",
-                isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-700"
-              )}>Venue</label>
-              <select
-                value={newTournament.venueId}
-                onChange={(e) => setNewTournament({ ...newTournament, venueId: e.target.value })}
-                className={clsx(
-                  "w-full px-4 py-3 rounded-xl border outline-none",
-                  isSyndicate 
-                    ? "bg-black/40 border-syndicate-red/30 text-nasty-cream focus:border-syndicate-red" 
-                    : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
-                )}
-              >
-                <option value="">Select Venue</option>
-                {venues.map(v => (
-                  <option key={v.id} value={v.id}>{v.name}</option>
-                ))}
-              </select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className={clsx(
+                  "block text-sm font-bold mb-2",
+                  isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-700"
+                )}>Tournament Type</label>
+                <select
+                  value={newTournament.type}
+                  onChange={(e) => {
+                    const newType = e.target.value as 'single-elimination' | 'double-elimination' | 'round-robin';
+                    setNewTournament({
+                      ...newTournament,
+                      type: newType,
+                      ...(newType === 'round-robin' && !newTournament.roundRobinConfig ? {
+                        roundRobinConfig: { podSize: 4, gamesPerPlayer: 3 }
+                      } : {})
+                    });
+                  }}
+                  className={clsx(
+                    "w-full px-4 py-3 rounded-xl border outline-none",
+                    isSyndicate
+                      ? "bg-black/40 border-syndicate-red/30 text-nasty-cream focus:border-syndicate-red"
+                      : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                  )}
+                >
+                  <option value="single-elimination">Single Elimination</option>
+                  <option value="double-elimination">Double Elimination</option>
+                  <option value="round-robin">Round Robin</option>
+                </select>
+              </div>
+              <div>
+                <label className={clsx(
+                  "block text-sm font-bold mb-2",
+                  isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-700"
+                )}>Venue</label>
+                <select
+                  value={newTournament.venueId}
+                  onChange={(e) => setNewTournament({ ...newTournament, venueId: e.target.value })}
+                  className={clsx(
+                    "w-full px-4 py-3 rounded-xl border outline-none",
+                    isSyndicate
+                      ? "bg-black/40 border-syndicate-red/30 text-nasty-cream focus:border-syndicate-red"
+                      : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                  )}
+                >
+                  <option value="">Select Venue</option>
+                  {venues.map(v => (
+                    <option key={v.id} value={v.id}>{v.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
+
+            {newTournament.type === 'round-robin' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={clsx(
+                    "block text-sm font-bold mb-2",
+                    isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-700"
+                  )}>Pod Size</label>
+                  <input
+                    type="number"
+                    min="2"
+                    value={newTournament.roundRobinConfig?.podSize || 4}
+                    onChange={(e) => {
+                      const size = parseInt(e.target.value) || 2;
+                      setNewTournament({
+                        ...newTournament,
+                        roundRobinConfig: {
+                          podSize: size,
+                          gamesPerPlayer: Math.max(1, size - 1)
+                        }
+                      });
+                    }}
+                    className={clsx(
+                      "w-full px-4 py-3 rounded-xl border outline-none",
+                      isSyndicate
+                        ? "bg-black/40 border-syndicate-red/30 text-nasty-cream focus:border-syndicate-red"
+                        : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                    )}
+                  />
+                </div>
+                <div>
+                  <label className={clsx(
+                    "block text-sm font-bold mb-2",
+                    isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-700"
+                  )}>Games Per Player</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={newTournament.roundRobinConfig?.gamesPerPlayer || 3}
+                    onChange={(e) => setNewTournament({
+                      ...newTournament,
+                      roundRobinConfig: {
+                        podSize: newTournament.roundRobinConfig?.podSize || 4,
+                        gamesPerPlayer: parseInt(e.target.value) || 1
+                      }
+                    })}
+                    className={clsx(
+                      "w-full px-4 py-3 rounded-xl border outline-none",
+                      isSyndicate
+                        ? "bg-black/40 border-syndicate-red/30 text-nasty-cream focus:border-syndicate-red"
+                        : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                    )}
+                  />
+                </div>
+              </div>
+            )}
 
             <div className={clsx(
               "pt-4 border-t",
@@ -1401,14 +1491,23 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                   <label className="block text-sm font-bold mb-2 opacity-60">Tournament Type</label>
                   <select
                     value={editingTournament.type}
-                    onChange={(e) => setEditingTournament({ ...editingTournament, type: e.target.value as 'single-elimination' | 'double-elimination' | 'round-robin' })}
+                    onChange={(e) => {
+                      const newType = e.target.value as 'single-elimination' | 'double-elimination' | 'round-robin';
+                      setEditingTournament({
+                        ...editingTournament,
+                        type: newType,
+                        ...(newType === 'round-robin' && !editingTournament.roundRobinConfig ? {
+                          roundRobinConfig: { podSize: 4, gamesPerPlayer: 3 }
+                        } : {})
+                      });
+                    }}
                     className={clsx(
                       "w-full px-4 py-3 rounded-xl border outline-none transition-all",
                       isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red" : isDark ? "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
                     )}
                   >
-                    <option value="single">Single Elimination</option>
-                    <option value="double">Double Elimination</option>
+                    <option value="single-elimination">Single Elimination</option>
+                    <option value="double-elimination">Double Elimination</option>
                     <option value="round-robin">Round Robin</option>
                   </select>
                 </div>
@@ -1428,6 +1527,52 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                   </select>
                 </div>
               </div>
+
+              {editingTournament.type === 'round-robin' && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold mb-2 opacity-60">Pod Size</label>
+                    <input
+                      type="number"
+                      min="2"
+                      value={editingTournament.roundRobinConfig?.podSize || 4}
+                      onChange={(e) => {
+                        const size = parseInt(e.target.value) || 2;
+                        setEditingTournament({
+                          ...editingTournament,
+                          roundRobinConfig: {
+                            podSize: size,
+                            gamesPerPlayer: Math.max(1, size - 1)
+                          }
+                        });
+                      }}
+                      className={clsx(
+                        "w-full px-4 py-3 rounded-xl border outline-none transition-all",
+                        isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                      )}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2 opacity-60">Games Per Player</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={editingTournament.roundRobinConfig?.gamesPerPlayer || 3}
+                      onChange={(e) => setEditingTournament({
+                        ...editingTournament,
+                        roundRobinConfig: {
+                          podSize: editingTournament.roundRobinConfig?.podSize || 4,
+                          gamesPerPlayer: parseInt(e.target.value) || 1
+                        }
+                      })}
+                      className={clsx(
+                        "w-full px-4 py-3 rounded-xl border outline-none transition-all",
+                        isSyndicate ? "bg-black/40 border-syndicate-red/20 focus:border-syndicate-red text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-indigo-500 text-slate-50" : "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                      )}
+                    />
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-bold mb-4 opacity-60">Game Type</label>
