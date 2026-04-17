@@ -285,24 +285,30 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
     // Add set operations for new matches
     for (const match of newMatches) {
       const newDocRef = doc(collection(db, 'matches'));
-      allOps.push({ type: 'set', ref: newDocRef, data: match });
+      const sanitizedMatch = JSON.parse(JSON.stringify(match));
+      allOps.push({ type: 'set', ref: newDocRef, data: sanitizedMatch });
     }
 
     // Update tournament status
     allOps.push({ type: 'update', ref: doc(db, 'tournaments', tournamentId), data: { status: 'live' } });
 
     // Execute chunks
-    for (let i = 0; i < allOps.length; i += BATCH_LIMIT) {
-      const batch = writeBatch(db);
-      const chunk = allOps.slice(i, i + BATCH_LIMIT);
+    try {
+      for (let i = 0; i < allOps.length; i += BATCH_LIMIT) {
+        const batch = writeBatch(db);
+        const chunk = allOps.slice(i, i + BATCH_LIMIT);
 
-      for (const op of chunk) {
-        if (op.type === 'delete') batch.delete(op.ref);
-        else if (op.type === 'set' && op.data) batch.set(op.ref, op.data);
-        else if (op.type === 'update' && op.data) batch.update(op.ref, op.data);
+        for (const op of chunk) {
+          if (op.type === 'delete') batch.delete(op.ref);
+          else if (op.type === 'set' && op.data) batch.set(op.ref, op.data);
+          else if (op.type === 'update' && op.data) batch.update(op.ref, op.data);
+        }
+
+        await batch.commit();
       }
-
-      await batch.commit();
+    } catch (error) {
+      console.error("Error generating bracket:", error);
+      alert("Failed to generate bracket. Check console for details.");
     }
   };
 

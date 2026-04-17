@@ -99,22 +99,29 @@ export function AdminTournamentEditor({ tournamentId, onBack, tournaments, seaso
 
     for (const match of newMatches) {
       const newDocRef = doc(collection(db, 'matches'));
-      allOps.push({ type: 'set', ref: newDocRef, data: match });
+      // Strip undefined fields to prevent Firestore errors
+      const sanitizedMatch = JSON.parse(JSON.stringify(match));
+      allOps.push({ type: 'set', ref: newDocRef, data: sanitizedMatch });
     }
 
     allOps.push({ type: 'update', ref: doc(db, 'tournaments', liveTournament.id), data: { status: 'live' } });
 
-    for (let i = 0; i < allOps.length; i += BATCH_LIMIT) {
-      const batch = writeBatch(db);
-      const chunk = allOps.slice(i, i + BATCH_LIMIT);
+    try {
+      for (let i = 0; i < allOps.length; i += BATCH_LIMIT) {
+        const batch = writeBatch(db);
+        const chunk = allOps.slice(i, i + BATCH_LIMIT);
 
-      for (const op of chunk) {
-        if (op.type === 'delete') batch.delete(op.ref);
-        else if (op.type === 'set' && op.data) batch.set(op.ref, op.data);
-        else if (op.type === 'update' && op.data) batch.update(op.ref, op.data);
+        for (const op of chunk) {
+          if (op.type === 'delete') batch.delete(op.ref);
+          else if (op.type === 'set' && op.data) batch.set(op.ref, op.data);
+          else if (op.type === 'update' && op.data) batch.update(op.ref, op.data);
+        }
+
+        await batch.commit();
       }
-
-      await batch.commit();
+    } catch (error) {
+      console.error("Error generating bracket:", error);
+      alert("Failed to generate bracket. Check console for details.");
     }
   };
 
