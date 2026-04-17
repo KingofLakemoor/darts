@@ -1,3 +1,4 @@
+import { X01HistoryState, CricketHistoryState } from "../types";
 import React, { useState, useEffect } from 'react';
 import { doc, updateDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -31,8 +32,8 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
   const [sets1, setSets1] = useState(match.score1 || 0);
   const [sets2, setSets2] = useState(match.score2 || 0);
   const [currentDarts, setCurrentDarts] = useState<number[]>([]);
-  const [x01History, setX01History] = useState<any[]>([]);
-  const [cricketHistory, setCricketHistory] = useState<any[]>([]);
+  const [x01History, setX01History] = useState<X01HistoryState[]>([]);
+  const [cricketHistory, setCricketHistory] = useState<CricketHistoryState[]>([]);
   const [modifier, setModifier] = useState<'single' | 'double' | 'triple'>('single');
   const [totalDarts1, setTotalDarts1] = useState(0);
   const [totalDarts2, setTotalDarts2] = useState(0);
@@ -260,10 +261,10 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
     setTotalDarts1(lastState.totalDarts1);
     setTotalDarts2(lastState.totalDarts2);
     setActivePlayer(lastState.activePlayer);
-    setLegs1(lastState.legs1);
-    setLegs2(lastState.legs2);
-    setSets1(lastState.sets1);
-    setSets2(lastState.sets2);
+    setLegs1(lastState.legs1 || 0);
+    setLegs2(lastState.legs2 || 0);
+    setSets1(lastState.sets1 || 0);
+    setSets2(lastState.sets2 || 0);
     setX01History(prev => prev.slice(0, -1));
   };
 

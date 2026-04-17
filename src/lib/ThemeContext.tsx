@@ -1,6 +1,6 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 
-type Theme = 'light' | 'dark';
+type Theme = 'light' | 'dark' | 'syndicate';
 
 interface ThemeContextType {
   theme: Theme;
@@ -40,7 +40,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   return (
     <ThemeContext.Provider value={{
-      theme: isSyndicate ? 'syndicate' as any : theme,
+      theme: isSyndicate ? 'syndicate' : theme,
       isSyndicate,
       isDark,
       isLight,

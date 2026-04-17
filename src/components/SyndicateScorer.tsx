@@ -1,10 +1,11 @@
+import { SyndicateHistoryState } from "../types";
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Target, Shield, Trophy, Skull, Crosshair, Zap, RotateCcw } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useTheme } from '../lib/ThemeContext';
 
-interface Player {
+export interface SyndicatePlayer {
   id: string;
   name: string;
   score: number;
@@ -23,7 +24,7 @@ export function SyndicateScorer() {
 
   const [view, setView] = useState<'scoreboard' | 'bracket'>('scoreboard');
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [players, setPlayers] = useState<Player[]>([
+  const [players, setPlayers] = useState<SyndicatePlayer[]>([
     { id: '1', name: 'GHOST', score: 301, isVested: true, hasBounty: true, history: [] },
     { id: '2', name: 'PROSPECT_04', score: 301, isVested: false, hasBounty: false, history: [] }
   ]);
@@ -34,7 +35,7 @@ export function SyndicateScorer() {
 
   const [currentDarts, setCurrentDarts] = useState<number[]>([]);
   const [modifier, setModifier] = useState<'single' | 'double' | 'triple'>('single');
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<SyndicateHistoryState[]>([]);
 
   const activePlayer = players[activePlayerIndex];
 
@@ -158,7 +159,7 @@ export function SyndicateScorer() {
   const handleUndo = () => {
     if (history.length === 0 || showWinner) return;
     const lastState = history[history.length - 1];
-    setPlayers(lastState.players);
+    setPlayers(lastState.players as SyndicatePlayer[]);
     setActivePlayerIndex(lastState.activePlayerIndex);
     setCurrentDarts(lastState.currentDarts);
     setHistory(prev => prev.slice(0, -1));

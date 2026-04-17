@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import { DocumentReference,
   collection, 
   onSnapshot, 
   query, 
@@ -15,7 +15,7 @@ import {
   setDoc
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Tournament, Season, Player, GameType, X01Config, CricketConfig, Venue } from '../types';
+import { Match, Tournament, Season, Player, GameType, X01Config, CricketConfig, Venue } from '../types';
 import { Plus, Trash2, Calendar, Trophy, Users, CheckCircle2, XCircle, Settings2, Shield, Skull, Edit, MapPin, X, Edit2 } from 'lucide-react';
 import { generateBracket } from '../utils/bracket';
 import { shuffleArray } from '../utils/random';
@@ -114,7 +114,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
   const createTournament = async () => {
     if (!newTournament.name) return;
 
-    const tournamentData: any = {
+    const tournamentData: Partial<Tournament> = {
       ...newTournament,
       status: 'upcoming',
       participants: []
@@ -276,7 +276,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
 
     // Chunking logic for batch writes (limit is 500 per batch)
     const BATCH_LIMIT = 500;
-    const allOps: Array<{type: 'delete' | 'set' | 'update', ref: any, data?: any}> = [];
+    const allOps: Array<{type: 'delete' | 'set' | 'update', ref: DocumentReference, data?: Partial<Match> | { status: string } }> = [];
 
     // Add delete operations
     for (const mDoc of existingMatchesSnapshot.docs) {
@@ -299,8 +299,8 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
 
       for (const op of chunk) {
         if (op.type === 'delete') batch.delete(op.ref);
-        else if (op.type === 'set') batch.set(op.ref, op.data);
-        else if (op.type === 'update') batch.update(op.ref, op.data);
+        else if (op.type === 'set' && op.data) batch.set(op.ref, op.data);
+        else if (op.type === 'update' && op.data) batch.update(op.ref, op.data);
       }
 
       await batch.commit();
