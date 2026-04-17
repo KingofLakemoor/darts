@@ -13,6 +13,8 @@ export interface CricketConfig {
   random: boolean;
 }
 
+import { shuffleArray } from './random';
+
 export interface Match {
   id: string;
   tournamentId: string;
@@ -37,7 +39,7 @@ export function generateBracket(
   gameConfig: X01Config | CricketConfig,
   seededParticipants: string[] = []
 ): Omit<Match, 'id'>[] {
-  const playersToUse = seededParticipants.length > 0 ? seededParticipants : [...participants].sort(() => Math.random() - 0.5);
+  const playersToUse = seededParticipants.length > 0 ? seededParticipants : shuffleArray(participants);
   const numPlayers = playersToUse.length;
   const numRounds = Math.ceil(Math.log2(numPlayers));
   const bracketSize = Math.pow(2, numRounds);

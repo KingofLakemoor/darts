@@ -10,12 +10,14 @@ import {
   deleteDoc,
   where,
   getDocs,
-  serverTimestamp 
+  serverTimestamp,
+  writeBatch
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Tournament, Season, Player, GameType, X01Config, CricketConfig, Venue } from '../types';
 import { Plus, Trash2, Calendar, Trophy, Users, CheckCircle2, XCircle, Settings2, Shield, Skull, Edit, MapPin, X, Edit2 } from 'lucide-react';
 import { generateBracket } from '../utils/bracket';
+import { shuffleArray } from '../utils/random';
 import { format } from 'date-fns';
 import { useTheme } from '../lib/ThemeContext';
 import { motion } from 'motion/react';
@@ -238,7 +240,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
     let seededParticipants = [...tournament.participants];
 
     if (seedingMethod === 'random') {
-      seededParticipants.sort(() => Math.random() - 0.5);
+      seededParticipants = shuffleArray(seededParticipants);
     } else if (seedingMethod === 'season') {
       // Sort by season points (wins)
       seededParticipants.sort((a, b) => {
@@ -268,17 +270,38 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
     const matchesRef = collection(db, 'matches');
     const existingMatchesQ = query(matchesRef, where('tournamentId', '==', tournamentId));
     const existingMatchesSnapshot = await getDocs(existingMatchesQ);
+
+    // Chunking logic for batch writes (limit is 500 per batch)
+    const BATCH_LIMIT = 500;
+    const allOps: Array<{type: 'delete' | 'set' | 'update', ref: any, data?: any}> = [];
+
+    // Add delete operations
     for (const mDoc of existingMatchesSnapshot.docs) {
-      await deleteDoc(doc(db, 'matches', mDoc.id));
+      allOps.push({ type: 'delete', ref: doc(db, 'matches', mDoc.id) });
     }
 
-    // Add new matches
+    // Add set operations for new matches
     for (const match of newMatches) {
-      await addDoc(collection(db, 'matches'), match);
+      const newDocRef = doc(collection(db, 'matches'));
+      allOps.push({ type: 'set', ref: newDocRef, data: match });
     }
 
     // Update tournament status
-    await updateDoc(doc(db, 'tournaments', tournamentId), { status: 'live' });
+    allOps.push({ type: 'update', ref: doc(db, 'tournaments', tournamentId), data: { status: 'live' } });
+
+    // Execute chunks
+    for (let i = 0; i < allOps.length; i += BATCH_LIMIT) {
+      const batch = writeBatch(db);
+      const chunk = allOps.slice(i, i + BATCH_LIMIT);
+
+      for (const op of chunk) {
+        if (op.type === 'delete') batch.delete(op.ref);
+        else if (op.type === 'set') batch.set(op.ref, op.data);
+        else if (op.type === 'update') batch.update(op.ref, op.data);
+      }
+
+      await batch.commit();
+    }
   };
 
   const handleGameTypeChange = (type: GameType) => {
