@@ -15,7 +15,8 @@ interface Props {
 }
 
 export function TournamentView({ tournaments, season, venues }: Props) {
-  const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
+  const [selectedTournamentId, setSelectedTournamentId] = useState<string | null>(null);
+  const selectedTournament = tournaments.find(t => t.id === selectedTournamentId) || null;
   const { isSyndicate, isDark, setSyndicateMode } = useTheme();
 
   useEffect(() => {
@@ -32,7 +33,7 @@ export function TournamentView({ tournaments, season, venues }: Props) {
     return (
       <div className="space-y-6">
         <button 
-          onClick={() => setSelectedTournament(null)}
+          onClick={() => setSelectedTournamentId(null)}
           className={clsx(
             "flex items-center gap-2 transition-colors font-medium",
             isSyndicate ? "text-steel-gray hover:text-nasty-cream" : isDark ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-900"
@@ -84,7 +85,7 @@ export function TournamentView({ tournaments, season, venues }: Props) {
           <SectionHeader title="Live Events" icon={<Target className={clsx("w-6 h-6", isDark && !isSyndicate ? "text-emerald-400" : "text-emerald-600")} />} />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {live.map(t => (
-              <TournamentCard key={t.id} tournament={t} venues={venues} onClick={() => setSelectedTournament(t)} />
+              <TournamentCard key={t.id} tournament={t} venues={venues} onClick={() => setSelectedTournamentId(t.id)} />
             ))}
           </div>
         </section>
@@ -95,7 +96,7 @@ export function TournamentView({ tournaments, season, venues }: Props) {
         {upcoming.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {upcoming.map(t => (
-              <TournamentCard key={t.id} tournament={t} venues={venues} onClick={() => setSelectedTournament(t)} />
+              <TournamentCard key={t.id} tournament={t} venues={venues} onClick={() => setSelectedTournamentId(t.id)} />
             ))}
           </div>
         ) : (
@@ -108,7 +109,7 @@ export function TournamentView({ tournaments, season, venues }: Props) {
           <SectionHeader title="Recent Results" icon={<Trophy className={clsx("w-6 h-6", isDark && !isSyndicate ? "text-amber-500" : "text-amber-600")} />} />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {completed.map(t => (
-              <TournamentCard key={t.id} tournament={t} venues={venues} onClick={() => setSelectedTournament(t)} />
+              <TournamentCard key={t.id} tournament={t} venues={venues} onClick={() => setSelectedTournamentId(t.id)} />
             ))}
           </div>
         </section>
