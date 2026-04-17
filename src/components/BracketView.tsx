@@ -44,24 +44,31 @@ export function BracketView({ tournament }: Props) {
   const startTournament = async () => {
     if (tournament.participants.length < 2) return;
     
-    const batch = writeBatch(db);
-    const generatedMatches = generateBracket(
-      tournament.participants, 
-      tournament.id,
-      tournament.gameType,
-      tournament.gameConfig,
-      [],
-      tournament.type,
-      tournament.roundRobinConfig
-    );
-    
-    generatedMatches.forEach(match => {
-      const matchRef = doc(collection(db, 'matches'));
-      batch.set(matchRef, match);
-    });
+    try {
+      const batch = writeBatch(db);
+      const generatedMatches = generateBracket(
+        tournament.participants,
+        tournament.id,
+        tournament.gameType,
+        tournament.gameConfig,
+        [],
+        tournament.type,
+        tournament.roundRobinConfig
+      );
 
-    batch.update(doc(db, 'tournaments', tournament.id), { status: 'live' });
-    await batch.commit();
+      generatedMatches.forEach(match => {
+        const matchRef = doc(collection(db, 'matches'));
+        // Strip undefined fields to prevent Firestore errors
+        const sanitizedMatch = JSON.parse(JSON.stringify(match));
+        batch.set(matchRef, sanitizedMatch);
+      });
+
+      batch.update(doc(db, 'tournaments', tournament.id), { status: 'live' });
+      await batch.commit();
+    } catch (error) {
+      console.error("Error starting tournament:", error);
+      alert("Failed to start tournament. Check console for details.");
+    }
   };
 
   const joinTournament = async () => {
