@@ -18,6 +18,7 @@ import { db } from '../firebase';
 import { Match, Tournament, Season, Player, GameType, X01Config, CricketConfig, Venue } from '../types';
 import { Plus, Trash2, Calendar, Trophy, Users, CheckCircle2, XCircle, Settings2, Shield, Skull, Edit, MapPin, X, Edit2 } from 'lucide-react';
 import { generateBracket } from '../utils/bracket';
+import { getSeededParticipants } from '../utils/seeding';
 import { shuffleArray } from '../utils/random';
 import { format } from 'date-fns';
 import { useTheme } from '../lib/ThemeContext';
@@ -234,31 +235,25 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
     });
   };
 
-  const [seedingMethod, setSeedingMethod] = useState<'random' | 'season' | 'skill'>('random');
-
   const handleGenerateBracket = async (tournamentId: string) => {
     const tournament = tournaments.find(t => t.id === tournamentId);
     if (!tournament || !tournament.participants || tournament.participants.length < 2) return;
 
-    let seededParticipants = [...tournament.participants];
-
-    if (seedingMethod === 'random') {
-      seededParticipants = shuffleArray(seededParticipants);
-    } else if (seedingMethod === 'season') {
-      // Sort by season points (wins)
-      seededParticipants.sort((a, b) => {
-        const pA = players.find(p => p.uid === a);
-        const pB = players.find(p => p.uid === b);
-        return (pB?.stats?.wins || 0) - (pA?.stats?.wins || 0);
-      });
-    } else if (seedingMethod === 'skill') {
-      // Sort by average score
-      seededParticipants.sort((a, b) => {
-        const pA = players.find(p => p.uid === a);
-        const pB = players.find(p => p.uid === b);
-        return (pB?.stats?.avgScore || 0) - (pA?.stats?.avgScore || 0);
-      });
+    let allMatches: Match[] = [];
+    if (tournament.seasonId) {
+      // Fetch all matches that are completed for this season
+      // We don't query by seasonId directly on matches because they don't have it,
+      // instead getSeededParticipants filters matches by the season's tournament IDs.
+      const matchesSnapshot = await getDocs(query(collection(db, 'matches'), where('status', '==', 'completed')));
+      allMatches = matchesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Match));
     }
+
+    const seededParticipants = getSeededParticipants(
+      tournament.participants,
+      tournament,
+      tournaments,
+      allMatches
+    );
 
     // Generate matches using the utility
     const newMatches = generateBracket(
@@ -857,26 +852,12 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
 
             <div className="flex flex-col md:flex-row gap-6 items-end">
               <div className="flex-1">
-                <label className={clsx(
-                  "block text-sm font-bold mb-2",
-                  isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-700"
-                )}>Seeding Method</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {(['random', 'season', 'skill'] as const).map((method) => (
-                    <button
-                      key={method}
-                      onClick={() => setSeedingMethod(method)}
-                      className={clsx(
-                        "py-3 rounded-xl font-bold text-sm transition-all border capitalize",
-                        seedingMethod === method 
-                          ? (isSyndicate ? "bg-syndicate-red/20 border-syndicate-red text-syndicate-red" : isDark ? "bg-indigo-500/20 border-indigo-500/50 text-indigo-400" : "bg-indigo-50 border-indigo-200 text-indigo-700")
-                          : (isSyndicate ? "bg-black/40 border-syndicate-red/10 text-nasty-cream/40" : isDark ? "bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700" : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50")
-                      )}
-                    >
-                      {method}
-                    </button>
-                  ))}
-                </div>
+                <p className={clsx(
+                  "text-sm font-medium",
+                  isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-600"
+                )}>
+                  Brackets are automatically seeded based on season rankings (wins). If there are no current season rankings, or if this is a one-off tournament, the bracket will be randomized.
+                </p>
               </div>
               
               <button
