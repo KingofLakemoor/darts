@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, where, doc, updateDoc, addDoc, getDocs, writeBatch } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { Tournament, Match, Player } from '../types';
-import { Trophy, Target, Users, Play, CheckCircle2, Layout, List, Shield, Skull } from 'lucide-react';
+import { Trophy, Target, Users, Play, CheckCircle2, Layout, List, Shield, Skull, FastForward, XCircle } from 'lucide-react';
 import { generateBracket } from '../utils/bracket';
 import { ScorerView } from './ScorerView';
 import { motion } from 'motion/react';
@@ -77,6 +77,66 @@ export function BracketView({ tournament }: Props) {
     if (!newParticipants.includes(auth.currentUser.uid)) {
       newParticipants.push(auth.currentUser.uid);
       await updateDoc(doc(db, 'tournaments', tournament.id), { participants: newParticipants });
+    }
+  };
+
+  const handleClearMatch = async (match: Match) => {
+    try {
+      const matchRef = doc(db, 'matches', match.id);
+      await updateDoc(matchRef, {
+        status: 'completed'
+      });
+    } catch (error) {
+      console.error("Error clearing match:", error);
+      alert("Failed to clear match. Check console.");
+    }
+  };
+
+  const handleAutoAdvance = async (match: Match) => {
+    try {
+      const winnerId = match.player1Id || match.player2Id;
+      if (!winnerId) return;
+
+      const batch = writeBatch(db);
+      const matchRef = doc(db, 'matches', match.id);
+
+      batch.update(matchRef, {
+        status: 'completed',
+        winnerId: winnerId,
+        score1: match.player1Id === winnerId ? 1 : 0,
+        score2: match.player2Id === winnerId ? 1 : 0,
+      });
+
+      const nextPosition = Math.floor(match.position / 2);
+      const nextRound = match.round + 1;
+
+      const q = query(
+        collection(db, 'matches'),
+        where('tournamentId', '==', tournament.id),
+        where('round', '==', nextRound),
+        where('position', '==', nextPosition)
+      );
+
+      const nextMatchSnap = await getDocs(q);
+      if (!nextMatchSnap.empty) {
+        const nextMatch = nextMatchSnap.docs[0];
+        const isPlayer1 = match.position % 2 === 0;
+
+        batch.update(nextMatch.ref, {
+          [isPlayer1 ? 'player1Id' : 'player2Id']: winnerId
+        });
+      } else {
+        const tournamentRef = doc(db, 'tournaments', tournament.id);
+        batch.update(tournamentRef, {
+          winnerId,
+          status: 'completed'
+        });
+      }
+
+      await batch.commit();
+    } catch (error) {
+      console.error("Error auto-advancing match:", error);
+      alert("Failed to auto-advance. Check console.");
     }
   };
 
@@ -241,6 +301,8 @@ export function BracketView({ tournament }: Props) {
                       hasAdminPrivileges={hasAdminPrivileges}
                       currentUserId={auth.currentUser?.uid}
                       onScore={() => setActiveMatch(match)}
+                      onAutoAdvance={() => handleAutoAdvance(match)}
+                      onClear={() => handleClearMatch(match)}
                     />
                   ))}
                 </div>
@@ -267,6 +329,8 @@ export function BracketView({ tournament }: Props) {
                     hasAdminPrivileges={hasAdminPrivileges}
                     currentUserId={auth.currentUser?.uid}
                     onScore={() => setActiveMatch(match)}
+                    onAutoAdvance={() => handleAutoAdvance(match)}
+                    onClear={() => handleClearMatch(match)}
                   />
                 ))}
               </div>
@@ -285,6 +349,8 @@ export function BracketView({ tournament }: Props) {
               hasAdminPrivileges={hasAdminPrivileges}
               currentUserId={auth.currentUser?.uid}
               onScore={() => setActiveMatch(match)}
+              onAutoAdvance={() => handleAutoAdvance(match)}
+              onClear={() => handleClearMatch(match)}
             />
           ))}
         </div>
@@ -293,12 +359,14 @@ export function BracketView({ tournament }: Props) {
   );
 }
 
-function MatchCard({ match, players, hasAdminPrivileges, currentUserId, onScore }: {
+function MatchCard({ match, players, hasAdminPrivileges, currentUserId, onScore, onAutoAdvance, onClear }: {
   match: Match, 
   players: Record<string, Player>, 
   hasAdminPrivileges: boolean,
   currentUserId?: string,
-  onScore: () => void 
+  onScore: () => void,
+  onAutoAdvance: () => void,
+  onClear: () => void
 }) {
   const p1 = players[match.player1Id];
   const p2 = players[match.player2Id];
@@ -343,6 +411,34 @@ function MatchCard({ match, players, hasAdminPrivileges, currentUserId, onScore 
           <Play className="w-3 h-3" />
           Score Match
         </button>
+      )}
+
+      {hasAdminPrivileges && match.status !== 'completed' && (!match.player1Id || !match.player2Id) && (
+        <div className="flex w-full">
+          {(!match.player1Id && !match.player2Id) ? (
+             <button
+              onClick={onClear}
+              className={clsx(
+                "w-full py-3 text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2",
+                isSyndicate ? "bg-syndicate-red/20 text-syndicate-red hover:bg-syndicate-red hover:text-nasty-cream font-rocker" : isDark ? "bg-slate-800 hover:bg-slate-700 text-slate-400" : "bg-slate-50 text-slate-500 hover:bg-slate-200"
+              )}
+             >
+               <XCircle className="w-3 h-3" />
+               Clear Match
+             </button>
+          ) : (
+             <button
+              onClick={onAutoAdvance}
+              className={clsx(
+                "w-full py-3 text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2",
+                 isSyndicate ? "bg-syndicate-red/20 text-syndicate-red hover:bg-syndicate-red hover:text-nasty-cream font-rocker" : isDark ? "bg-indigo-900/50 text-indigo-400 hover:bg-indigo-800" : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+              )}
+             >
+               <FastForward className="w-3 h-3" />
+               Auto Advance
+             </button>
+          )}
+        </div>
       )}
       
       {match.status === 'live' && (
