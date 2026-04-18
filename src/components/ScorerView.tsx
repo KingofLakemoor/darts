@@ -1,7 +1,7 @@
 import { X01HistoryState, CricketHistoryState } from "../types";
 import React, { useState, useEffect } from 'react';
 import { doc, updateDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
 import { Match, Player, X01Config, CricketConfig } from '../types';
 import { X, Target, Trophy, ChevronRight, Minus, Plus, Delete, RotateCcw, Check, Zap, Shield, Skull, Crosshair } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -107,6 +107,11 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
   };
 
   const saveMatch = async (isFinal: boolean) => {
+    if (auth.currentUser?.uid !== match.player1Id && auth.currentUser?.uid !== match.player2Id) {
+      alert("You are not authorized to score this match.");
+      return;
+    }
+
     setSaving(true);
     try {
       const matchRef = doc(db, 'matches', match.id);
@@ -575,7 +580,7 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
         )}>
           <button
             onClick={() => saveMatch(false)}
-            disabled={saving}
+            disabled={saving || (auth.currentUser?.uid !== match.player1Id && auth.currentUser?.uid !== match.player2Id)}
             className={clsx(
               "flex-1 py-4 rounded-2xl font-bold transition-all border disabled:opacity-50",
               isSyndicate 
@@ -587,7 +592,7 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
           </button>
           <button
             onClick={() => saveMatch(true)}
-            disabled={saving}
+            disabled={saving || (auth.currentUser?.uid !== match.player1Id && auth.currentUser?.uid !== match.player2Id)}
             className={clsx(
               "flex-1 py-4 rounded-2xl font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-3 shadow-xl",
               isSyndicate 

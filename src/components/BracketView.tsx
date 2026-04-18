@@ -405,7 +405,7 @@ function MatchCard({ match, players, hasAdminPrivileges, currentUserId, onScore,
         />
       </div>
       
-      {(hasAdminPrivileges || currentUserId === match.player1Id || currentUserId === match.player2Id) && match.status !== 'completed' && match.player1Id && match.player2Id && (
+      {(currentUserId === match.player1Id || currentUserId === match.player2Id) && match.status !== 'completed' && match.player1Id && match.player2Id && (
         <button
           onClick={onScore}
           className={clsx(
