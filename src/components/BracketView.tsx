@@ -8,6 +8,7 @@ import { ScorerView } from './ScorerView';
 import { motion } from 'motion/react';
 import { clsx } from 'clsx';
 import { useTheme } from '../lib/ThemeContext';
+import { formatPlayerNames } from '../utils/playerNames';
 
 interface Props {
   tournament: Tournament;
@@ -32,9 +33,12 @@ export function BracketView({ tournament }: Props) {
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'players'), (snapshot) => {
+      const fetchedPlayers = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Player));
+      const formattedPlayers = formatPlayerNames(fetchedPlayers);
+
       const playerMap: Record<string, Player> = {};
-      snapshot.docs.forEach(doc => {
-        playerMap[doc.id] = doc.data() as Player;
+      formattedPlayers.forEach(p => {
+        playerMap[p.uid] = p;
       });
       setPlayers(playerMap);
     });

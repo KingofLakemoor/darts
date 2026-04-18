@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useTheme } from '../lib/ThemeContext';
 import { clsx } from 'clsx';
 import { format } from 'date-fns';
+import { formatPlayerNames } from '../utils/playerNames';
 
 export function EventDashboard() {
   const { isSyndicate, isDark } = useTheme();
@@ -35,15 +36,16 @@ export function EventDashboard() {
 
     // Fetch players
     const unsubPlayers = onSnapshot(collection(db, 'players'), (snapshot) => {
+      const playerList = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Player));
+      const formattedPlayers = formatPlayerNames(playerList);
+
       const playerMap: Record<string, Player> = {};
-      const playerList: Player[] = [];
-      snapshot.docs.forEach(doc => {
-        const p = { uid: doc.id, ...doc.data() } as Player;
-        playerMap[doc.id] = p;
-        playerList.push(p);
+      formattedPlayers.forEach(p => {
+        playerMap[p.uid] = p;
       });
+
       setPlayers(playerMap);
-      setTopPlayers(playerList.sort((a, b) => (b.stats?.wins || 0) - (a.stats?.wins || 0)).slice(0, 5));
+      setTopPlayers([...formattedPlayers].sort((a, b) => (b.stats?.wins || 0) - (a.stats?.wins || 0)).slice(0, 5));
     });
 
     // Fetch live matches
