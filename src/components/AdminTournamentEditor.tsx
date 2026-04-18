@@ -35,18 +35,68 @@ export function AdminTournamentEditor({ tournamentId, onBack, tournaments, seaso
   }
 
   const handleSave = async () => {
-    await updateDoc(doc(db, 'tournaments', liveTournament.id), {
-      name: formData.name,
-      date: formData.date,
-      venueId: formData.venueId || '',
-      type: formData.type,
-      seasonId: formData.seasonId,
-      gameType: formData.gameType,
-      gameConfig: formData.gameConfig,
-      isSyndicate: formData.isSyndicate,
-      status: formData.status,
-      roundRobinConfig: formData.roundRobinConfig || null
-    });
+    if (liveTournament.status !== 'upcoming' && formData.status === 'upcoming') {
+      const confirmed = window.confirm('Warning: Reverting this tournament to "upcoming" will permanently delete all matches and scores. Are you sure you want to proceed?');
+      if (!confirmed) return;
+
+      const matchesRef = collection(db, 'matches');
+      const q = query(matchesRef, where('tournamentId', '==', liveTournament.id));
+      const snapshot = await getDocs(q);
+
+      const BATCH_LIMIT = 500;
+      const allOps: any[] = [];
+
+      for (const mDoc of snapshot.docs) {
+        allOps.push({ type: 'delete', ref: doc(db, 'matches', mDoc.id) });
+      }
+
+      allOps.push({
+        type: 'update',
+        ref: doc(db, 'tournaments', liveTournament.id),
+        data: {
+          name: formData.name,
+          date: formData.date,
+          venueId: formData.venueId || '',
+          type: formData.type,
+          seasonId: formData.seasonId,
+          gameType: formData.gameType,
+          gameConfig: formData.gameConfig,
+          isSyndicate: formData.isSyndicate,
+          status: formData.status,
+          roundRobinConfig: formData.roundRobinConfig || null
+        }
+      });
+
+      try {
+        for (let i = 0; i < allOps.length; i += BATCH_LIMIT) {
+          const batch = writeBatch(db);
+          const chunk = allOps.slice(i, i + BATCH_LIMIT);
+
+          for (const op of chunk) {
+            if (op.type === 'delete') batch.delete(op.ref);
+            else if (op.type === 'update' && op.data) batch.update(op.ref, op.data);
+          }
+
+          await batch.commit();
+        }
+      } catch (error) {
+        console.error("Error reverting tournament to upcoming:", error);
+        alert("Failed to revert tournament. Check console for details.");
+      }
+    } else {
+      await updateDoc(doc(db, 'tournaments', liveTournament.id), {
+        name: formData.name,
+        date: formData.date,
+        venueId: formData.venueId || '',
+        type: formData.type,
+        seasonId: formData.seasonId,
+        gameType: formData.gameType,
+        gameConfig: formData.gameConfig,
+        isSyndicate: formData.isSyndicate,
+        status: formData.status,
+        roundRobinConfig: formData.roundRobinConfig || null
+      });
+    }
   };
 
   const toggleParticipant = async (playerUid: string) => {
