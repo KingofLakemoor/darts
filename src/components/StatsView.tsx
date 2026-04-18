@@ -5,6 +5,7 @@ import { Player, Season, Tournament, Match } from '../types';
 import { TrendingUp, Search, ArrowUpRight, ArrowDownRight, Minus, Calendar } from 'lucide-react';
 import { useTheme } from '../lib/ThemeContext';
 import { clsx } from 'clsx';
+import { formatPlayerNames } from '../utils/playerNames';
 
 export function StatsView() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -19,7 +20,8 @@ export function StatsView() {
   useEffect(() => {
     const q = query(collection(db, 'players'), orderBy('name', 'asc'));
     return onSnapshot(q, (snapshot) => {
-      setPlayers(snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Player)));
+      const fetchedPlayers = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Player));
+      setPlayers(formatPlayerNames(fetchedPlayers));
     });
   }, []);
 

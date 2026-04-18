@@ -24,6 +24,7 @@ import { format } from 'date-fns';
 import { AdminTournamentEditor } from './AdminTournamentEditor';
 import { useTheme } from '../lib/ThemeContext';
 import { motion } from 'motion/react';
+import { formatPlayerNames } from '../utils/playerNames';
 
 export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
   const isAdmin = currentUser?.role === 'admin';
@@ -43,7 +44,8 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
 
   useEffect(() => {
     return onSnapshot(collection(db, 'players'), (snapshot) => {
-      setPlayers(snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Player)));
+      const fetchedPlayers = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Player));
+      setPlayers(formatPlayerNames(fetchedPlayers));
     });
   }, []);
 
