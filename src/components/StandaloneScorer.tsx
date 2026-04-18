@@ -13,7 +13,7 @@ export function StandaloneScorer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [gameMode, setGameMode] = useState<GameMode>('X01');
   const [startScore, setStartScore] = useState<X01StartScore>(301);
-  const [x01OutRule, setX01OutRule] = useState<'single' | 'double'>('double');
+  const [x01OutRule, setX01OutRule] = useState<'single' | 'double'>('single');
   const [player1Name, setPlayer1Name] = useState('Player 1');
   const [player2Name, setPlayer2Name] = useState('Player 2');
 
