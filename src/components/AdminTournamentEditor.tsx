@@ -50,21 +50,23 @@ export function AdminTournamentEditor({ tournamentId, onBack, tournaments, seaso
         allOps.push({ type: 'delete', ref: doc(db, 'matches', mDoc.id) });
       }
 
+      const updateData = {
+        name: formData.name,
+        date: formData.date,
+        venueId: formData.venueId || '',
+        type: formData.type,
+        seasonId: formData.seasonId,
+        gameType: formData.gameType,
+        gameConfig: formData.gameConfig,
+        isSyndicate: formData.isSyndicate,
+        status: formData.status,
+        roundRobinConfig: formData.roundRobinConfig || null
+      };
+
       allOps.push({
         type: 'update',
         ref: doc(db, 'tournaments', liveTournament.id),
-        data: {
-          name: formData.name,
-          date: formData.date,
-          venueId: formData.venueId || '',
-          type: formData.type,
-          seasonId: formData.seasonId,
-          gameType: formData.gameType,
-          gameConfig: formData.gameConfig,
-          isSyndicate: formData.isSyndicate,
-          status: formData.status,
-          roundRobinConfig: formData.roundRobinConfig || null
-        }
+        data: JSON.parse(JSON.stringify(updateData))
       });
 
       try {
@@ -84,7 +86,7 @@ export function AdminTournamentEditor({ tournamentId, onBack, tournaments, seaso
         alert("Failed to revert tournament. Check console for details.");
       }
     } else {
-      await updateDoc(doc(db, 'tournaments', liveTournament.id), {
+      const updateData = {
         name: formData.name,
         date: formData.date,
         venueId: formData.venueId || '',
@@ -95,7 +97,9 @@ export function AdminTournamentEditor({ tournamentId, onBack, tournaments, seaso
         isSyndicate: formData.isSyndicate,
         status: formData.status,
         roundRobinConfig: formData.roundRobinConfig || null
-      });
+      };
+
+      await updateDoc(doc(db, 'tournaments', liveTournament.id), JSON.parse(JSON.stringify(updateData)));
     }
   };
 
