@@ -24,7 +24,7 @@ import { format } from 'date-fns';
 import { AdminTournamentEditor } from './AdminTournamentEditor';
 import { useTheme } from '../lib/ThemeContext';
 import { motion } from 'motion/react';
-import { formatPlayerNames } from '../utils/playerNames';
+import { formatPlayerNames, getFirstLast } from '../utils/playerNames';
 
 export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
   const isAdmin = currentUser?.role === 'admin';
@@ -41,6 +41,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [newVenue, setNewVenue] = useState({ name: '', address: '', boards: 4, isSyndicatePartner: false });
   const [editingVenue, setEditingVenue] = useState<Venue | null>(null);
+  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
 
   useEffect(() => {
     return onSnapshot(collection(db, 'players'), (snapshot) => {
@@ -213,6 +214,18 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
     });
     
     setNewPlayer({ firstName: '', lastName: '', email: '' });
+  };
+
+  const updatePlayerDetails = async () => {
+    if (!editingPlayer) return;
+    const first = editingPlayer.firstName || '';
+    const last = editingPlayer.lastName || '';
+    await updateDoc(doc(db, 'players', editingPlayer.uid), {
+      firstName: first,
+      lastName: last,
+      name: `${first} ${last}`.trim()
+    });
+    setEditingPlayer(null);
   };
 
   const deletePlayer = async (uid: string) => {
@@ -1261,6 +1274,19 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                             <option value="admin">Admin</option>
                           </select>
                           <button
+                            onClick={() => {
+                              const { first, last } = getFirstLast(p);
+                              setEditingPlayer({
+                                ...p,
+                                firstName: p.firstName || first,
+                                lastName: p.lastName || last,
+                              });
+                            }}
+                            className="p-1 text-slate-400 hover:text-indigo-500 transition-colors"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
                             onClick={() => deletePlayer(p.uid)}
                             className="p-1 text-slate-400 hover:text-red-500 transition-colors"
                           >
@@ -1365,6 +1391,81 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                   </button>
                   <button
                     onClick={updateVenue}
+                    className={clsx(
+                      "flex-1 py-4 rounded-2xl font-bold transition-all shadow-lg",
+                      isSyndicate ? "bg-syndicate-red text-white hover:bg-red-700" : isDark ? "bg-indigo-500 text-white hover:bg-indigo-600" : "bg-indigo-600 text-white hover:bg-indigo-700"
+                    )}
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Edit Player Modal */}
+      {editingPlayer && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={clsx(
+              "w-full max-w-lg rounded-3xl border shadow-2xl overflow-hidden",
+              isSyndicate ? "bg-onyx border-syndicate-red/30 leather-bg" : isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
+            )}
+          >
+            <div className="p-8">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className={clsx(
+                  "text-2xl font-bold",
+                  isSyndicate ? "text-nasty-cream font-rocker" : isDark ? "text-slate-50" : "text-slate-900"
+                )}>Edit Player Name</h2>
+                <button onClick={() => setEditingPlayer(null)} className="text-slate-400 hover:text-slate-600">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-bold mb-2 opacity-60">First Name</label>
+                  <input
+                    type="text"
+                    value={editingPlayer.firstName || ''}
+                    onChange={(e) => setEditingPlayer({ ...editingPlayer, firstName: e.target.value })}
+                    className={clsx(
+                      "w-full px-4 py-3 rounded-xl border outline-none",
+                      isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                    )}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold mb-2 opacity-60">Last Name</label>
+                  <input
+                    type="text"
+                    value={editingPlayer.lastName || ''}
+                    onChange={(e) => setEditingPlayer({ ...editingPlayer, lastName: e.target.value })}
+                    className={clsx(
+                      "w-full px-4 py-3 rounded-xl border outline-none",
+                      isSyndicate ? "bg-black/40 border-syndicate-red/30 text-nasty-cream" : isDark ? "bg-slate-800 border-slate-700 text-slate-50 focus:ring-2 focus:ring-indigo-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                    )}
+                  />
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <button
+                    onClick={() => setEditingPlayer(null)}
+                    className={clsx(
+                      "flex-1 py-4 rounded-2xl font-bold transition-all",
+                      isSyndicate ? "bg-black/40 text-nasty-cream hover:bg-black/60" : isDark ? "bg-slate-800 text-slate-400 hover:bg-slate-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    )}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={updatePlayerDetails}
                     className={clsx(
                       "flex-1 py-4 rounded-2xl font-bold transition-all shadow-lg",
                       isSyndicate ? "bg-syndicate-red text-white hover:bg-red-700" : isDark ? "bg-indigo-500 text-white hover:bg-indigo-600" : "bg-indigo-600 text-white hover:bg-indigo-700"
