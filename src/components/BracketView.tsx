@@ -239,6 +239,7 @@ export function BracketView({ tournament }: Props) {
                       match={match} 
                       players={players} 
                       hasAdminPrivileges={hasAdminPrivileges}
+                      currentUserId={auth.currentUser?.uid}
                       onScore={() => setActiveMatch(match)}
                     />
                   ))}
@@ -264,6 +265,7 @@ export function BracketView({ tournament }: Props) {
                     match={match}
                     players={players}
                     hasAdminPrivileges={hasAdminPrivileges}
+                    currentUserId={auth.currentUser?.uid}
                     onScore={() => setActiveMatch(match)}
                   />
                 ))}
@@ -281,6 +283,7 @@ export function BracketView({ tournament }: Props) {
               match={match} 
               players={players} 
               hasAdminPrivileges={hasAdminPrivileges}
+              currentUserId={auth.currentUser?.uid}
               onScore={() => setActiveMatch(match)}
             />
           ))}
@@ -290,10 +293,11 @@ export function BracketView({ tournament }: Props) {
   );
 }
 
-function MatchCard({ match, players, hasAdminPrivileges, onScore }: { 
+function MatchCard({ match, players, hasAdminPrivileges, currentUserId, onScore }: {
   match: Match, 
   players: Record<string, Player>, 
   hasAdminPrivileges: boolean,
+  currentUserId?: string,
   onScore: () => void 
 }) {
   const p1 = players[match.player1Id];
@@ -326,7 +330,7 @@ function MatchCard({ match, players, hasAdminPrivileges, onScore }: {
         />
       </div>
       
-      {hasAdminPrivileges && match.status !== 'completed' && match.player1Id && match.player2Id && (
+      {(hasAdminPrivileges || currentUserId === match.player1Id || currentUserId === match.player2Id) && match.status !== 'completed' && match.player1Id && match.player2Id && (
         <button
           onClick={onScore}
           className={clsx(
