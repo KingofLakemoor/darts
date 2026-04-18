@@ -732,18 +732,27 @@ function PlayerScore({ player, score, legs, sets, isActive, marks, isShaking, da
                 "text-[10px] font-bold",
                 isSyndicate ? "text-steel-gray" : "text-slate-500"
               )}>{num === 25 ? 'B' : num}</span>
-              <div className="flex flex-col gap-0.5">
-                {[1, 2, 3].map(i => (
-                  <div 
-                    key={i} 
-                    className={clsx(
-                      "w-4 h-1 rounded-full transition-all",
-                      marks[num] >= i 
-                        ? (isSyndicate ? "bg-syndicate-red" : "bg-indigo-500") 
-                        : (isSyndicate ? "bg-onyx" : "bg-slate-800")
-                    )} 
-                  />
-                ))}
+              <div className="flex flex-col gap-0.5 h-4 justify-end">
+                {marks[num] >= 3 ? (
+                  <div className={clsx(
+                    "w-4 h-4 rounded-sm flex items-center justify-center",
+                    isSyndicate ? "bg-syndicate-red" : "bg-emerald-400"
+                  )}>
+                    <Check className="w-3 h-3 text-slate-900" strokeWidth={4} />
+                  </div>
+                ) : (
+                  [1, 2, 3].map(i => (
+                    <div
+                      key={i}
+                      className={clsx(
+                        "w-4 h-1 rounded-full transition-all",
+                        marks[num] >= i
+                          ? (isSyndicate ? "bg-syndicate-red" : "bg-emerald-400")
+                          : (isSyndicate ? "bg-onyx" : "bg-slate-800")
+                      )}
+                    />
+                  ))
+                )}
               </div>
             </div>
           ))}
