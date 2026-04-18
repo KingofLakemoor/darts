@@ -125,6 +125,8 @@ export interface CricketHistoryState {
   cricketPoints2: number;
   currentDarts: number[];
   activePlayer: 1 | 2;
+  legs1?: number;
+  legs2?: number;
 }
 
 export interface SyndicateHistoryState {

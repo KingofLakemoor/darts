@@ -17,6 +17,13 @@ export function StandaloneScorer() {
   const [player1Name, setPlayer1Name] = useState('Player 1');
   const [player2Name, setPlayer2Name] = useState('Player 2');
 
+  // Match State
+  const [bestOf, setBestOf] = useState<number>(1);
+  const [legs1, setLegs1] = useState<number>(0);
+  const [legs2, setLegs2] = useState<number>(0);
+  const [startingPlayer, setStartingPlayer] = useState<1 | 2>(1);
+  const [legWinner, setLegWinner] = useState<string | null>(null);
+
   // Game State
   const [activePlayer, setActivePlayer] = useState<1 | 2>(1);
   const [score1, setScore1] = useState<number>(301);
@@ -45,10 +52,14 @@ export function StandaloneScorer() {
     setCurrentDarts([]);
     setX01History([]);
     setCricketHistory([]);
+    setLegs1(0);
+    setLegs2(0);
+    setStartingPlayer(1);
     setActivePlayer(1);
     setTotalDarts1(0);
     setTotalDarts2(0);
     setWinner(null);
+    setLegWinner(null);
     setModifier('single');
     setCricketMarks1({ 20: 0, 19: 0, 18: 0, 17: 0, 16: 0, 15: 0, 25: 0 });
     setCricketMarks2({ 20: 0, 19: 0, 18: 0, 17: 0, 16: 0, 15: 0, 25: 0 });
@@ -60,6 +71,23 @@ export function StandaloneScorer() {
   const endGame = () => {
     setIsPlaying(false);
     setWinner(null);
+  };
+
+  const handleWin = (player: 1 | 2) => {
+    const newLegs1 = player === 1 ? legs1 + 1 : legs1;
+    const newLegs2 = player === 2 ? legs2 + 1 : legs2;
+
+    if (player === 1) setLegs1(newLegs1);
+    else setLegs2(newLegs2);
+
+    const legsRequired = Math.ceil(bestOf / 2);
+    if (newLegs1 >= legsRequired) {
+      setWinner(player1Name);
+    } else if (newLegs2 >= legsRequired) {
+      setWinner(player2Name);
+    } else {
+      setLegWinner(player === 1 ? player1Name : player2Name);
+    }
   };
 
   const getCheckoutSuggestion = (score: number, outRule: 'single' | 'double' | 'triple' = 'double'): string => {
@@ -108,7 +136,7 @@ export function StandaloneScorer() {
   };
 
   const handleX01Dart = (value: number) => {
-    if (winner) return;
+    if (winner || legWinner) return;
 
     let points = value;
     if (modifier === 'double') points *= 2;
@@ -121,6 +149,8 @@ export function StandaloneScorer() {
       totalDarts1,
       totalDarts2,
       activePlayer,
+      legs1,
+      legs2,
     };
     setX01History(prev => [...prev, stateSnapshot]);
 
@@ -135,11 +165,11 @@ export function StandaloneScorer() {
       if (activePlayer === 1) {
         setScore1(0);
         setTotalDarts1(prev => prev + newDarts.length);
-        setWinner(player1Name);
+        handleWin(1);
       } else {
         setScore2(0);
         setTotalDarts2(prev => prev + newDarts.length);
-        setWinner(player2Name);
+        handleWin(2);
       }
       setCurrentDarts([]);
     } else if (newScore < 0 || (newScore === 1 && x01OutRule === 'double') || (newScore === 0 && !canWin)) {
@@ -176,7 +206,7 @@ export function StandaloneScorer() {
   };
 
   const handleCricketMark = (num: number, multiplier: number = 1) => {
-    if (winner) return;
+    if (winner || legWinner) return;
     if (num === 25 && multiplier === 3) multiplier = 2;
 
     const stateSnapshot = {
@@ -186,6 +216,8 @@ export function StandaloneScorer() {
       cricketPoints2,
       activePlayer,
       currentDarts: [...currentDarts],
+      legs1,
+      legs2,
     };
     setCricketHistory(prev => [...prev, stateSnapshot]);
 
@@ -224,12 +256,32 @@ export function StandaloneScorer() {
     const leading = activePlayer === 1 ? cricketPoints1 >= cricketPoints2 : cricketPoints2 >= cricketPoints1;
 
     if (allClosed && leading) {
-      setWinner(activePlayer === 1 ? player1Name : player2Name);
+      handleWin(activePlayer);
     }
   };
 
+  const nextLeg = () => {
+    const nextStarter = startingPlayer === 1 ? 2 : 1;
+    setStartingPlayer(nextStarter);
+
+    setScore1(startScore);
+    setScore2(startScore);
+    setCricketMarks1({ 20: 0, 19: 0, 18: 0, 17: 0, 16: 0, 15: 0, 25: 0 });
+    setCricketMarks2({ 20: 0, 19: 0, 18: 0, 17: 0, 16: 0, 15: 0, 25: 0 });
+    setCricketPoints1(0);
+    setCricketPoints2(0);
+    setCurrentDarts([]);
+    setTotalDarts1(0);
+    setTotalDarts2(0);
+    setX01History([]);
+    setCricketHistory([]);
+    setActivePlayer(nextStarter);
+    setLegWinner(null);
+    setModifier('single');
+  };
+
   const handleCricketMiss = () => {
-    if (winner) return;
+    if (winner || legWinner) return;
 
     const stateSnapshot = {
       cricketMarks1: { ...cricketMarks1 },
@@ -238,6 +290,8 @@ export function StandaloneScorer() {
       cricketPoints2,
       activePlayer,
       currentDarts: [...currentDarts],
+      legs1,
+      legs2,
     };
     setCricketHistory(prev => [...prev, stateSnapshot]);
 
@@ -251,7 +305,7 @@ export function StandaloneScorer() {
   };
 
   const handleUndoCricket = () => {
-    if (cricketHistory.length === 0 || winner) return;
+    if (cricketHistory.length === 0 || winner || legWinner) return;
     const lastState = cricketHistory[cricketHistory.length - 1];
     setCricketMarks1(lastState.cricketMarks1);
     setCricketMarks2(lastState.cricketMarks2);
@@ -259,11 +313,13 @@ export function StandaloneScorer() {
     setCricketPoints2(lastState.cricketPoints2);
     setActivePlayer(lastState.activePlayer);
     setCurrentDarts(lastState.currentDarts || []);
+    if (lastState.legs1 !== undefined) setLegs1(lastState.legs1);
+    if (lastState.legs2 !== undefined) setLegs2(lastState.legs2);
     setCricketHistory(prev => prev.slice(0, -1));
   };
 
   const handleUndoX01 = () => {
-    if (x01History.length === 0 || winner) return;
+    if (x01History.length === 0 || winner || legWinner) return;
     const lastState = x01History[x01History.length - 1];
     setScore1(lastState.score1);
     setScore2(lastState.score2);
@@ -271,6 +327,8 @@ export function StandaloneScorer() {
     setTotalDarts1(lastState.totalDarts1);
     setTotalDarts2(lastState.totalDarts2);
     setActivePlayer(lastState.activePlayer);
+    if (lastState.legs1 !== undefined) setLegs1(lastState.legs1);
+    if (lastState.legs2 !== undefined) setLegs2(lastState.legs2);
     setX01History(prev => prev.slice(0, -1));
   };
 
@@ -329,7 +387,7 @@ export function StandaloneScorer() {
                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center animate-in fade-in zoom-in duration-500">
                   <Trophy className={clsx("w-32 h-32 mb-8", isSyndicate ? "text-bounty-gold animate-bounce" : "text-amber-400")} />
                   <h2 className={clsx("text-6xl font-black mb-4", isSyndicate ? "text-nasty-cream font-rocker branded-text" : "text-white")}>
-                    {winner} WINS!
+                    {winner} WINS MATCH!
                   </h2>
                   <button
                     onClick={startGame}
@@ -339,6 +397,22 @@ export function StandaloneScorer() {
                     )}
                   >
                     Play Again
+                  </button>
+               </div>
+            ) : legWinner ? (
+               <div className="flex-1 flex flex-col items-center justify-center p-12 text-center animate-in fade-in zoom-in duration-500">
+                  <Trophy className={clsx("w-32 h-32 mb-8", isSyndicate ? "text-syndicate-red" : "text-indigo-400")} />
+                  <h2 className={clsx("text-6xl font-black mb-4", isSyndicate ? "text-nasty-cream font-rocker branded-text" : "text-white")}>
+                    {legWinner} WINS LEG!
+                  </h2>
+                  <button
+                    onClick={nextLeg}
+                    className={clsx(
+                      "mt-8 px-8 py-4 rounded-2xl font-bold text-xl transition-all shadow-xl",
+                      isSyndicate ? "bg-syndicate-red text-nasty-cream hover:bg-red-700 shadow-syndicate-red/20" : "bg-indigo-600 text-white hover:bg-indigo-500 shadow-indigo-500/20"
+                    )}
+                  >
+                    Next Leg
                   </button>
                </div>
             ) : (
@@ -356,6 +430,8 @@ export function StandaloneScorer() {
                     darts={activePlayer === 1 ? currentDarts : []}
                     roundTotal={activePlayer === 1 ? currentDarts.reduce((a, b) => a + b, 0) : 0}
                     suggestionParts={gameMode === 'X01' && activePlayer === 1 ? getCheckoutSuggestion(score1, x01OutRule)?.split(' ').filter(Boolean) : []}
+                    legs={legs1}
+                    bestOf={bestOf}
                   />
                   <PlayerScore
                     name={player2Name}
@@ -365,6 +441,8 @@ export function StandaloneScorer() {
                     darts={activePlayer === 2 ? currentDarts : []}
                     roundTotal={activePlayer === 2 ? currentDarts.reduce((a, b) => a + b, 0) : 0}
                     suggestionParts={gameMode === 'X01' && activePlayer === 2 ? getCheckoutSuggestion(score2, x01OutRule)?.split(' ').filter(Boolean) : []}
+                    legs={legs2}
+                    bestOf={bestOf}
                   />
                 </div>
 
@@ -580,6 +658,30 @@ export function StandaloneScorer() {
             )}
           </AnimatePresence>
 
+          {/* Match Format */}
+          <div className={clsx("pt-4 border-t", isDark ? "border-slate-800" : "border-slate-100")}>
+            <label className={clsx(
+              "block text-sm font-bold mb-4 uppercase tracking-wider",
+              isSyndicate ? "text-nasty-cream/60" : isDark ? "text-slate-400" : "text-slate-500"
+            )}>Match Format</label>
+            <div className="grid grid-cols-4 gap-4">
+              {([1, 3, 5, 7] as const).map(format => (
+                <button
+                  key={format}
+                  onClick={() => setBestOf(format)}
+                  className={clsx(
+                    "py-3 rounded-xl font-bold transition-all border",
+                    bestOf === format
+                      ? (isSyndicate ? "bg-syndicate-red/20 border-syndicate-red text-syndicate-red" : isDark ? "bg-indigo-500/20 border-indigo-500 text-indigo-400" : "bg-indigo-50 border-indigo-600 text-indigo-700")
+                      : (isSyndicate ? "bg-black/40 border-syndicate-red/10 text-nasty-cream/40" : isDark ? "bg-slate-800 border-slate-700 text-slate-400 hover:border-indigo-500/50" : "bg-white border-slate-200 text-slate-500 hover:border-indigo-200")
+                  )}
+                >
+                  Best of {format}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Players */}
           <div className={clsx("pt-4 border-t", isDark ? "border-slate-800" : "border-slate-100")}>
              <label className={clsx(
@@ -634,14 +736,16 @@ export function StandaloneScorer() {
   );
 }
 
-function PlayerScore({ name, score, isActive, marks, darts, roundTotal, suggestionParts = [] }: {
+function PlayerScore({ name, score, isActive, marks, darts, roundTotal, suggestionParts = [], legs, bestOf }: {
   name: string,
   score: number,
   isActive: boolean,
   marks?: Record<number, number>,
   darts?: number[],
   roundTotal?: number,
-  suggestionParts?: string[]
+  suggestionParts?: string[],
+  legs?: number,
+  bestOf?: number
 }) {
   const { isSyndicate } = useTheme();
 
@@ -674,12 +778,20 @@ function PlayerScore({ name, score, isActive, marks, darts, roundTotal, suggesti
           )}>
             {name.charAt(0).toUpperCase()}
           </div>
-          <h3 className={clsx(
-            "text-lg font-bold transition-colors",
-            isActive
-              ? (isSyndicate ? "text-nasty-cream font-rocker" : "text-white")
-              : (isSyndicate ? "text-steel-gray font-rocker" : "text-slate-500")
-          )}>{name}</h3>
+          <div className="flex flex-col">
+            <h3 className={clsx(
+              "text-lg font-bold transition-colors",
+              isActive
+                ? (isSyndicate ? "text-nasty-cream font-rocker" : "text-white")
+                : (isSyndicate ? "text-steel-gray font-rocker" : "text-slate-500")
+            )}>{name}</h3>
+            {bestOf && bestOf > 1 && (
+              <span className={clsx(
+                "text-xs font-bold uppercase tracking-widest",
+                isActive ? (isSyndicate ? "text-syndicate-red" : "text-indigo-400") : "text-slate-500"
+              )}>Legs: {legs}</span>
+            )}
+          </div>
         </div>
         <div className={clsx(
           "text-2xl font-black tabular-nums",
