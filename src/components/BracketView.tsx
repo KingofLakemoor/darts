@@ -5,6 +5,7 @@ import { Tournament, Match, Player } from '../types';
 import { Trophy, Target, Users, Play, CheckCircle2, Layout, List, Shield, Skull, FastForward, XCircle } from 'lucide-react';
 import { generateBracket } from '../utils/bracket';
 import { ScorerView } from './ScorerView';
+import { TournamentResultsView } from './TournamentResultsView';
 import { motion } from 'motion/react';
 import { clsx } from 'clsx';
 import { useTheme } from '../lib/ThemeContext';
@@ -19,7 +20,7 @@ export function BracketView({ tournament }: Props) {
   const [matches, setMatches] = useState<Match[]>([]);
   const [players, setPlayers] = useState<Record<string, Player>>({});
   const [activeMatch, setActiveMatch] = useState<Match | null>(null);
-  const [viewMode, setViewMode] = useState<'bracket' | 'list'>('bracket');
+  const [viewMode, setViewMode] = useState<'bracket' | 'list' | 'results'>(tournament.status === 'completed' ? 'results' : 'bracket');
   const currentPlayer = Object.values(players).find(p => p.uid === auth.currentUser?.uid);
   const hasAdminPrivileges = currentPlayer?.role === 'admin' || currentPlayer?.role === 'coordinator';
 
@@ -247,6 +248,19 @@ export function BracketView({ tournament }: Props) {
               >
                 <List className="w-5 h-5" />
               </button>
+              {tournament.status === 'completed' && (
+                <button
+                  onClick={() => setViewMode('results')}
+                  className={clsx(
+                    "p-2 rounded-lg transition-all",
+                    viewMode === 'results'
+                      ? (isSyndicate ? "bg-syndicate-red text-nasty-cream shadow-sm" : isDark ? "bg-slate-700 text-indigo-400 shadow-sm" : "bg-white text-indigo-600 shadow-sm")
+                      : (isSyndicate ? "text-steel-gray hover:text-nasty-cream" : isDark ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-900")
+                  )}
+                >
+                  <Trophy className="w-5 h-5" />
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -361,6 +375,14 @@ export function BracketView({ tournament }: Props) {
             />
           ))}
         </div>
+      )}
+
+      {tournament.status === 'completed' && viewMode === 'results' && (
+        <TournamentResultsView
+          tournament={tournament}
+          matches={matches}
+          players={players}
+        />
       )}
     </div>
   );
