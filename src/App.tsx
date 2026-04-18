@@ -30,7 +30,6 @@ import { PlayerView } from './components/PlayerView';
 import { StatsView } from './components/StatsView';
 import { ScorerView } from './components/ScorerView';
 import { StandaloneScorer } from './components/StandaloneScorer';
-import { SyndicateScorer } from './components/SyndicateScorer';
 import { EventDashboard } from './components/EventDashboard';
 import { ThemeProvider } from './lib/ThemeContext';
 import { 
@@ -59,7 +58,7 @@ function AppContent() {
   const [user, setUser] = useState<User | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'tournaments' | 'players' | 'stats' | 'admin' | 'syndicate' | 'dashboard' | 'scorer'>('tournaments');
+  const [activeTab, setActiveTab] = useState<'tournaments' | 'players' | 'stats' | 'admin' | 'dashboard' | 'scorer'>('tournaments');
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [activeSeason, setActiveSeason] = useState<Season | null>(null);
@@ -273,13 +272,6 @@ function AppContent() {
                       onClick={() => { setActiveTab('scorer'); setIsSidebarOpen(false); }}
                       label="Offline Scoreboard"
                     />
-                    <button
-                      onClick={() => { setActiveTab('syndicate'); setIsSidebarOpen(false); }}
-                      className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-200 font-semibold text-sm text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                    >
-                      <Skull className="w-5 h-5" />
-                      Syndicate Mode
-                    </button>
                     {user && (
                       <>
                         <NavIcon
@@ -413,9 +405,6 @@ function AppContent() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              {activeTab === 'syndicate' && (
-                <SyndicateScorer />
-              )}
               {activeTab === 'dashboard' && (
                 <EventDashboard />
               )}
