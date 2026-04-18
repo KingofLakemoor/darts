@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, where, doc, updateDoc, addDoc, getDocs, writeBatch } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, doc, updateDoc, addDoc, getDocs, writeBatch, arrayUnion } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { Tournament, Match, Player } from '../types';
 import { Trophy, Target, Users, Play, CheckCircle2, Layout, List, Shield, Skull, FastForward, XCircle } from 'lucide-react';
@@ -77,10 +77,13 @@ export function BracketView({ tournament }: Props) {
 
   const joinTournament = async () => {
     if (!auth.currentUser) return;
-    const newParticipants = [...tournament.participants];
-    if (!newParticipants.includes(auth.currentUser.uid)) {
-      newParticipants.push(auth.currentUser.uid);
-      await updateDoc(doc(db, 'tournaments', tournament.id), { participants: newParticipants });
+    try {
+      await updateDoc(doc(db, 'tournaments', tournament.id), {
+        participants: arrayUnion(auth.currentUser.uid)
+      });
+    } catch (error) {
+      console.error("Error joining tournament:", error);
+      alert("Failed to join tournament. Check console for details.");
     }
   };
 
