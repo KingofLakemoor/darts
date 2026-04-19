@@ -446,6 +446,17 @@ function MatchCard({ match, players, hasAdminPrivileges, currentUserId, onScore,
   const p2 = players[match.player2Id];
   const { isSyndicate, isDark } = useTheme();
 
+  const getDisplayScore = (playerNum: 1 | 2) => {
+    if (match.status === 'live') {
+      const currentScore = playerNum === 1 ? match.currentScore1 : match.currentScore2;
+      if (currentScore !== undefined) return currentScore;
+      if (match.gameType === 'X01') return (match.gameConfig as any)?.startScore || 301;
+      return 0; // Default for Cricket
+    }
+    // Completed or upcoming match
+    return playerNum === 1 ? match.legs1 : match.legs2;
+  };
+
   return (
     <div className={clsx(
       "rounded-2xl border shadow-sm overflow-hidden group transition-all duration-300",
@@ -456,7 +467,7 @@ function MatchCard({ match, players, hasAdminPrivileges, currentUserId, onScore,
       <div className="p-4 space-y-3">
         <PlayerRow 
           player={p1} 
-          score={match.score1} 
+          score={getDisplayScore(1)}
           isWinner={match.winnerId === match.player1Id} 
           isPlaceholder={!match.player1Id}
           legs={match.legs1}
@@ -468,7 +479,7 @@ function MatchCard({ match, players, hasAdminPrivileges, currentUserId, onScore,
         )} />
         <PlayerRow 
           player={p2} 
-          score={match.score2} 
+          score={getDisplayScore(2)}
           isWinner={match.winnerId === match.player2Id} 
           isPlaceholder={!match.player2Id}
           legs={match.legs2}

@@ -258,6 +258,8 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
           score2: sets2,
           legs1,
           legs2,
+          currentScore1: activePlayer === 1 ? newScore : score1,
+          currentScore2: activePlayer === 2 ? newScore : score2,
           status: 'live'
         }).catch(err => console.error('Auto-save error:', err));
       } else {
@@ -342,6 +344,18 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
     if (newDarts.length === 3) {
       setCurrentDarts([]);
       setActivePlayer(activePlayer === 1 ? 2 : 1);
+
+      // Auto-save progress
+      const matchRef = doc(db, 'matches', match.id);
+      updateDoc(matchRef, {
+        score1: sets1,
+        score2: sets2,
+        legs1,
+        legs2,
+        currentScore1: cricketPoints1,
+        currentScore2: cricketPoints2,
+        status: 'live'
+      }).catch(err => console.error('Auto-save error:', err));
     } else {
       setCurrentDarts(newDarts);
     }
@@ -372,6 +386,18 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
     if (newDarts.length === 3) {
       setCurrentDarts([]);
       setActivePlayer(activePlayer === 1 ? 2 : 1);
+
+      // Auto-save progress
+      const matchRef = doc(db, 'matches', match.id);
+      updateDoc(matchRef, {
+        score1: sets1,
+        score2: sets2,
+        legs1,
+        legs2,
+        currentScore1: cricketPoints1,
+        currentScore2: cricketPoints2,
+        status: 'live'
+      }).catch(err => console.error('Auto-save error:', err));
     } else {
       setCurrentDarts(newDarts);
     }

@@ -89,6 +89,8 @@ export interface Match {
   score2: number; // Sets won
   legs1: number; // Legs won in current set
   legs2: number; // Legs won in current set
+  currentScore1?: number; // Live in-game score for P1 (X01 score or Cricket points)
+  currentScore2?: number; // Live in-game score for P2
   winnerId?: string;
   status: 'pending' | 'live' | 'completed';
   round: number;
