@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Target, Shield, Trophy, Skull, Crosshair, Zap, RotateCcw } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useTheme } from '../lib/ThemeContext';
+import { removeUndefinedFields } from '../utils/firestore';
 
 export interface SyndicatePlayer {
   id: string;
@@ -100,7 +101,7 @@ export function SyndicateScorer() {
     if (modifier === 'triple') points = value === 25 ? 50 : points * 3;
 
     const stateSnapshot = {
-      players: JSON.parse(JSON.stringify(players)),
+      players: removeUndefinedFields(players),
       activePlayerIndex,
       currentDarts: [...currentDarts],
     };

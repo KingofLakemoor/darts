@@ -4,6 +4,7 @@ import { db, auth } from '../firebase';
 import { Tournament, Match, Player } from '../types';
 import { Trophy, Target, Users, Play, CheckCircle2, Layout, List, Shield, Skull, FastForward, XCircle } from 'lucide-react';
 import { generateBracket } from '../utils/bracket';
+import { removeUndefinedFields } from '../utils/firestore';
 import { ScorerView } from './ScorerView';
 import { TournamentResultsView } from './TournamentResultsView';
 import { motion } from 'motion/react';
@@ -64,7 +65,7 @@ export function BracketView({ tournament }: Props) {
       generatedMatches.forEach(match => {
         const matchRef = doc(collection(db, 'matches'));
         // Strip undefined fields to prevent Firestore errors
-        const sanitizedMatch = JSON.parse(JSON.stringify(match));
+        const sanitizedMatch = removeUndefinedFields(match);
         batch.set(matchRef, sanitizedMatch);
       });
 

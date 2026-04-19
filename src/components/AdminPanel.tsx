@@ -19,6 +19,7 @@ import { Match, Tournament, Season, Player, GameType, X01Config, CricketConfig, 
 import { Plus, Trash2, Calendar, Trophy, Users, CheckCircle2, XCircle, Settings2, Shield, Skull, Edit, MapPin, X, Edit2 } from 'lucide-react';
 import { generateBracket } from '../utils/bracket';
 import { getSeededParticipants } from '../utils/seeding';
+import { removeUndefinedFields } from '../utils/firestore';
 import { shuffleArray } from '../utils/random';
 import { format } from 'date-fns';
 import { AdminTournamentEditor } from './AdminTournamentEditor';
@@ -300,7 +301,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
     // Add set operations for new matches
     for (const match of newMatches) {
       const newDocRef = doc(collection(db, 'matches'));
-      const sanitizedMatch = JSON.parse(JSON.stringify(match));
+      const sanitizedMatch = removeUndefinedFields(match);
       allOps.push({ type: 'set', ref: newDocRef, data: sanitizedMatch });
     }
 
