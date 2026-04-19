@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, where, doc, updateDoc, addDoc, getDocs, writeBatch, arrayUnion } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { Tournament, Match, Player } from '../types';
-import { Trophy, Target, Users, Play, CheckCircle2, Layout, List, Shield, Skull, FastForward, XCircle } from 'lucide-react';
+import { Trophy, Target, Users, Play, CheckCircle2, Layout, List, Shield, Skull, FastForward, XCircle, ZoomIn, ZoomOut } from 'lucide-react';
 import { generateBracket } from '../utils/bracket';
 import { removeUndefinedFields } from '../utils/firestore';
 import { ScorerView } from './ScorerView';
@@ -22,6 +22,7 @@ export function BracketView({ tournament }: Props) {
   const [players, setPlayers] = useState<Record<string, Player>>({});
   const [activeMatch, setActiveMatch] = useState<Match | null>(null);
   const [viewMode, setViewMode] = useState<'bracket' | 'list' | 'results'>(tournament.status === 'completed' ? 'results' : 'bracket');
+  const [zoomLevel, setZoomLevel] = useState(1);
   const currentPlayer = Object.values(players).find(p => p.uid === auth.currentUser?.uid);
   const hasAdminPrivileges = currentPlayer?.role === 'admin' || currentPlayer?.role === 'coordinator';
 
@@ -227,10 +228,48 @@ export function BracketView({ tournament }: Props) {
           )}
           
           {tournament.status !== 'upcoming' && (
-            <div className={clsx(
-              "flex p-1 rounded-xl",
-              isSyndicate ? "bg-onyx/50 border border-syndicate-red/20" : isDark ? "bg-slate-800" : "bg-slate-100"
-            )}>
+            <div className="flex items-center gap-3">
+              {viewMode === 'bracket' && (
+                <div className={clsx(
+                  "flex items-center p-1 rounded-xl gap-1",
+                  isSyndicate ? "bg-onyx/50 border border-syndicate-red/20" : isDark ? "bg-slate-800" : "bg-slate-100"
+                )}>
+                  <button
+                    onClick={() => setZoomLevel(prev => Math.max(0.25, prev - 0.25))}
+                    className={clsx(
+                      "p-2 rounded-lg transition-all",
+                      isSyndicate ? "text-steel-gray hover:text-nasty-cream hover:bg-syndicate-red/20" : isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-700" : "text-slate-500 hover:text-slate-900 hover:bg-white"
+                    )}
+                    title="Zoom Out"
+                  >
+                    <ZoomOut className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setZoomLevel(1)}
+                    className={clsx(
+                      "px-2 py-1 text-xs font-bold transition-all min-w-[3rem] text-center",
+                      isSyndicate ? "text-syndicate-red font-mono hover:text-nasty-cream" : isDark ? "text-slate-300 hover:text-white" : "text-slate-600 hover:text-slate-900"
+                    )}
+                    title="Reset Zoom"
+                  >
+                    {Math.round(zoomLevel * 100)}%
+                  </button>
+                  <button
+                    onClick={() => setZoomLevel(prev => Math.min(2, prev + 0.25))}
+                    className={clsx(
+                      "p-2 rounded-lg transition-all",
+                      isSyndicate ? "text-steel-gray hover:text-nasty-cream hover:bg-syndicate-red/20" : isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-700" : "text-slate-500 hover:text-slate-900 hover:bg-white"
+                    )}
+                    title="Zoom In"
+                  >
+                    <ZoomIn className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              <div className={clsx(
+                "flex p-1 rounded-xl",
+                isSyndicate ? "bg-onyx/50 border border-syndicate-red/20" : isDark ? "bg-slate-800" : "bg-slate-100"
+              )}>
               <button 
                 onClick={() => setViewMode('bracket')}
                 className={clsx(
@@ -253,19 +292,20 @@ export function BracketView({ tournament }: Props) {
               >
                 <List className="w-5 h-5" />
               </button>
-              {tournament.status === 'completed' && (
-                <button
-                  onClick={() => setViewMode('results')}
-                  className={clsx(
-                    "p-2 rounded-lg transition-all",
-                    viewMode === 'results'
-                      ? (isSyndicate ? "bg-syndicate-red text-nasty-cream shadow-sm" : isDark ? "bg-slate-700 text-indigo-400 shadow-sm" : "bg-white text-indigo-600 shadow-sm")
-                      : (isSyndicate ? "text-steel-gray hover:text-nasty-cream" : isDark ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-900")
-                  )}
-                >
-                  <Trophy className="w-5 h-5" />
-                </button>
-              )}
+                {tournament.status === 'completed' && (
+                  <button
+                    onClick={() => setViewMode('results')}
+                    className={clsx(
+                      "p-2 rounded-lg transition-all",
+                      viewMode === 'results'
+                        ? (isSyndicate ? "bg-syndicate-red text-nasty-cream shadow-sm" : isDark ? "bg-slate-700 text-indigo-400 shadow-sm" : "bg-white text-indigo-600 shadow-sm")
+                        : (isSyndicate ? "text-steel-gray hover:text-nasty-cream" : isDark ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-900")
+                    )}
+                  >
+                    <Trophy className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -309,7 +349,7 @@ export function BracketView({ tournament }: Props) {
 
       {tournament.status !== 'upcoming' && viewMode === 'bracket' && tournament.type !== 'round-robin' && (
         <div className="overflow-x-auto pb-8">
-          <div className="flex gap-12 min-w-max p-4">
+          <div className="flex gap-12 min-w-max p-4" style={{ zoom: zoomLevel } as React.CSSProperties}>
             {rounds.map(round => (
               <div key={round} className="w-72 space-y-8">
                 <div className="text-center mb-8">
@@ -339,7 +379,7 @@ export function BracketView({ tournament }: Props) {
       )}
 
       {tournament.status !== 'upcoming' && viewMode === 'bracket' && tournament.type === 'round-robin' && (
-        <div className="space-y-8">
+        <div className="space-y-8" style={{ zoom: zoomLevel } as React.CSSProperties}>
           {rounds.map(pod => (
             <div key={pod} className="space-y-4">
               <h3 className={clsx(
