@@ -8,6 +8,7 @@ import { clsx } from 'clsx';
 import { BracketView } from './BracketView';
 import { generateBracket } from '../utils/bracket';
 import { getSeededParticipants } from '../utils/seeding';
+import { removeUndefinedFields } from '../utils/firestore';
 import { format } from 'date-fns';
 
 interface Props {
@@ -66,7 +67,7 @@ export function AdminTournamentEditor({ tournamentId, onBack, tournaments, seaso
       allOps.push({
         type: 'update',
         ref: doc(db, 'tournaments', liveTournament.id),
-        data: JSON.parse(JSON.stringify(updateData))
+        data: removeUndefinedFields(updateData)
       });
 
       try {
@@ -99,7 +100,7 @@ export function AdminTournamentEditor({ tournamentId, onBack, tournaments, seaso
         roundRobinConfig: formData.roundRobinConfig || null
       };
 
-      await updateDoc(doc(db, 'tournaments', liveTournament.id), JSON.parse(JSON.stringify(updateData)));
+      await updateDoc(doc(db, 'tournaments', liveTournament.id), removeUndefinedFields(updateData));
     }
   };
 
@@ -154,7 +155,7 @@ export function AdminTournamentEditor({ tournamentId, onBack, tournaments, seaso
     for (const match of newMatches) {
       const newDocRef = doc(collection(db, 'matches'));
       // Strip undefined fields to prevent Firestore errors
-      const sanitizedMatch = JSON.parse(JSON.stringify(match));
+      const sanitizedMatch = removeUndefinedFields(match);
       allOps.push({ type: 'set', ref: newDocRef, data: sanitizedMatch });
     }
 
