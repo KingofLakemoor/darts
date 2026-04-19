@@ -13,9 +13,9 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    function isAdmin() {
+    function hasAdminPrivileges() {
       return isAuthenticated() && (
-        get(/databases/$(database)/documents/players/$(request.auth.uid)).data.role == 'admin' ||
+        get(/databases/$(database)/documents/players/$(request.auth.uid)).data.role in ['admin', 'coordinator'] ||
         (request.auth.token.email == "kingoflakemoor@gmail.com" && request.auth.token.email_verified == true)
       );
     }
@@ -35,14 +35,14 @@ service cloud.firestore {
 
     match /players/{uid} {
       allow read: if true;
-      allow create: if isAuthenticated() && (isOwner(uid) || isAdmin()) && isValidPlayer(request.resource.data);
-      allow update: if isAuthenticated() && (isOwner(uid) || isAdmin()) && isValidPlayer(request.resource.data);
+      allow create: if isAuthenticated() && (isOwner(uid) || hasAdminPrivileges()) && isValidPlayer(request.resource.data);
+      allow update: if isAuthenticated() && (isOwner(uid) || hasAdminPrivileges()) && isValidPlayer(request.resource.data);
     }
 
     match /tournaments/{tournamentId} {
       allow read: if true;
-      allow create: if isAdmin() && isValidTournament(request.resource.data);
-      allow update: if (isAdmin() && isValidTournament(request.resource.data)) ||
+      allow create: if hasAdminPrivileges() && isValidTournament(request.resource.data);
+      allow update: if (hasAdminPrivileges() && isValidTournament(request.resource.data)) ||
                        (isAuthenticated() &&
                         resource.data.status == 'upcoming' &&
                         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['participants']) &&
@@ -58,13 +58,13 @@ service cloud.firestore {
                           // Array union where already present (no change)
                           (request.resource.data.participants == resource.data.participants)
                         ));
-      allow delete: if isAdmin();
+      allow delete: if hasAdminPrivileges();
     }
 
     match /matches/{matchId} {
       allow read: if true;
-      allow create, delete: if isAdmin();
-      allow update: if isAdmin() ||
+      allow create, delete: if hasAdminPrivileges();
+      allow update: if hasAdminPrivileges() ||
                     (isAuthenticated() &&
                      (
                        request.auth.uid == resource.data.player1Id ||
@@ -78,12 +78,12 @@ service cloud.firestore {
 
     match /venues/{venueId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if hasAdminPrivileges();
     }
 
     match /seasons/{seasonId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if hasAdminPrivileges();
     }
   }
 }
