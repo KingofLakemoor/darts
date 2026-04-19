@@ -419,6 +419,8 @@ function MatchCard({ match, players, hasAdminPrivileges, currentUserId, onScore,
           score={match.score1} 
           isWinner={match.winnerId === match.player1Id} 
           isPlaceholder={!match.player1Id}
+          legs={match.legs1}
+          isLive={match.status === 'live'}
         />
         <div className={clsx(
           "h-px",
@@ -429,6 +431,8 @@ function MatchCard({ match, players, hasAdminPrivileges, currentUserId, onScore,
           score={match.score2} 
           isWinner={match.winnerId === match.player2Id} 
           isPlaceholder={!match.player2Id}
+          legs={match.legs2}
+          isLive={match.status === 'live'}
         />
       </div>
       
@@ -533,11 +537,13 @@ function MatchCard({ match, players, hasAdminPrivileges, currentUserId, onScore,
   );
 }
 
-function PlayerRow({ player, score, isWinner, isPlaceholder }: { 
+function PlayerRow({ player, score, isWinner, isPlaceholder, legs, isLive }: {
   player?: Player, 
   score: number, 
   isWinner: boolean,
-  isPlaceholder: boolean
+  isPlaceholder: boolean,
+  legs?: number,
+  isLive?: boolean
 }) {
   const { isSyndicate, isDark } = useTheme();
 
@@ -574,14 +580,24 @@ function PlayerRow({ player, score, isWinner, isPlaceholder }: {
           {player?.name || 'TBD'}
         </span>
       </div>
-      <span className={clsx(
-        "text-lg font-black tabular-nums",
-        isWinner 
-          ? (isSyndicate ? "text-syndicate-red font-mono" : isDark ? "text-indigo-400" : "text-indigo-600")
-          : (isSyndicate ? "text-steel-gray/30 font-mono" : isDark ? "text-slate-600" : "text-slate-400")
-      )}>
-        {score}
-      </span>
+      <div className="flex items-center gap-2">
+        {isLive && legs !== undefined && (
+          <span className={clsx(
+            "text-xs font-bold uppercase tracking-widest opacity-60 mr-2",
+            isSyndicate ? "text-syndicate-red" : isDark ? "text-indigo-400" : "text-indigo-600"
+          )}>
+            L: {legs}
+          </span>
+        )}
+        <span className={clsx(
+          "text-lg font-black tabular-nums",
+          isWinner
+            ? (isSyndicate ? "text-syndicate-red font-mono" : isDark ? "text-indigo-400" : "text-indigo-600")
+            : (isSyndicate ? "text-steel-gray/30 font-mono" : isDark ? "text-slate-600" : "text-slate-400")
+        )}>
+          {score}
+        </span>
+      </div>
     </div>
   );
 }
