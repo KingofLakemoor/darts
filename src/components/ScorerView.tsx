@@ -15,9 +15,11 @@ interface Props {
   player2: Player;
   onClose: () => void;
   isSyndicateTournament?: boolean;
+  tournamentType?: string;
+  hasAdminPrivileges?: boolean;
 }
 
-export function ScorerView({ match, tournamentId, player1, player2, onClose, isSyndicateTournament }: Props) {
+export function ScorerView({ match, tournamentId, player1, player2, onClose, isSyndicateTournament, tournamentType, hasAdminPrivileges }: Props) {
   const { isSyndicate: globalIsSyndicate, isDark } = useTheme();
   const isSyndicate = isSyndicateTournament || globalIsSyndicate;
   const [saving, setSaving] = useState(false);
@@ -107,7 +109,7 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
   };
 
   const saveMatch = async (isFinal: boolean) => {
-    if (auth.currentUser?.uid !== match.player1Id && auth.currentUser?.uid !== match.player2Id) {
+    if (!hasAdminPrivileges && auth.currentUser?.uid !== match.player1Id && auth.currentUser?.uid !== match.player2Id) {
       alert("You are not authorized to score this match.");
       return;
     }
@@ -127,29 +129,31 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
       });
 
       if (isFinal && winnerId) {
-        const nextPosition = Math.floor(match.position / 2);
-        const nextRound = match.round + 1;
-        
-        const q = query(
-          collection(db, 'matches'),
-          where('tournamentId', '==', tournamentId),
-          where('round', '==', nextRound),
-          where('position', '==', nextPosition)
-        );
-        
-        const nextMatchSnap = await getDocs(q);
-        if (!nextMatchSnap.empty) {
-          const nextMatch = nextMatchSnap.docs[0];
-          const isPlayer1 = match.position % 2 === 0;
+        if (tournamentType !== 'round-robin') {
+          const nextPosition = Math.floor(match.position / 2);
+          const nextRound = match.round + 1;
           
-          await updateDoc(nextMatch.ref, {
-            [isPlayer1 ? 'player1Id' : 'player2Id']: winnerId
-          });
-        } else {
-          await updateDoc(doc(db, 'tournaments', tournamentId), {
-            winnerId,
-            status: 'completed'
-          });
+          const q = query(
+            collection(db, 'matches'),
+            where('tournamentId', '==', tournamentId),
+            where('round', '==', nextRound),
+            where('position', '==', nextPosition)
+          );
+
+          const nextMatchSnap = await getDocs(q);
+          if (!nextMatchSnap.empty) {
+            const nextMatch = nextMatchSnap.docs[0];
+            const isPlayer1 = match.position % 2 === 0;
+
+            await updateDoc(nextMatch.ref, {
+              [isPlayer1 ? 'player1Id' : 'player2Id']: winnerId
+            });
+          } else {
+            await updateDoc(doc(db, 'tournaments', tournamentId), {
+              winnerId,
+              status: 'completed'
+            });
+          }
         }
       }
       
@@ -580,7 +584,7 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
         )}>
           <button
             onClick={() => saveMatch(false)}
-            disabled={saving || (auth.currentUser?.uid !== match.player1Id && auth.currentUser?.uid !== match.player2Id)}
+            disabled={saving || (!hasAdminPrivileges && auth.currentUser?.uid !== match.player1Id && auth.currentUser?.uid !== match.player2Id)}
             className={clsx(
               "flex-1 py-4 rounded-2xl font-bold transition-all border disabled:opacity-50",
               isSyndicate 
@@ -592,7 +596,7 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
           </button>
           <button
             onClick={() => saveMatch(true)}
-            disabled={saving || (auth.currentUser?.uid !== match.player1Id && auth.currentUser?.uid !== match.player2Id)}
+            disabled={saving || (!hasAdminPrivileges && auth.currentUser?.uid !== match.player1Id && auth.currentUser?.uid !== match.player2Id)}
             className={clsx(
               "flex-1 py-4 rounded-2xl font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-3 shadow-xl",
               isSyndicate 
