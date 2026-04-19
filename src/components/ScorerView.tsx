@@ -382,13 +382,13 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className={clsx(
-        "relative w-full h-full flex items-center justify-center p-0",
-        isSyndicate ? "leather-bg" : isDark ? "bg-slate-950/95 backdrop-blur-xl md:rounded-[3rem]" : "bg-slate-950/95 backdrop-blur-xl md:rounded-[3rem]"
+        "fixed inset-0 z-50 w-full h-full flex items-center justify-center p-0",
+        isSyndicate ? "leather-bg" : isDark ? "bg-slate-950/95 backdrop-blur-xl" : "bg-slate-950/95 backdrop-blur-xl"
       )}
     >
       <div className={clsx(
-        "w-full h-full md:h-auto md:max-w-6xl overflow-hidden shadow-2xl flex flex-col",
-        isSyndicate ? "merrowed-border leather-bg border-syndicate-red" : isDark ? "bg-slate-900 md:rounded-[3rem] border border-slate-800" : "bg-slate-900 md:rounded-[3rem] border border-slate-800"
+        "w-full h-full overflow-hidden flex flex-col",
+        isSyndicate ? "merrowed-border leather-bg border-syndicate-red" : isDark ? "bg-slate-900" : "bg-slate-900"
       )}>
         {/* Syndicate Vault Progress */}
         {isSyndicate && (
@@ -423,7 +423,7 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto flex flex-col">
+        <div className="flex-1 overflow-hidden flex flex-col">
           {/* Scoreboard */}
           <div className={clsx(
             "flex-1 grid grid-rows-2 divide-y",

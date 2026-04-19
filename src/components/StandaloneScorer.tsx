@@ -336,12 +336,12 @@ export function StandaloneScorer() {
   if (isPlaying) {
     return (
       <div className={clsx(
-        "relative w-full h-full flex items-center justify-center p-0",
-        isSyndicate ? "leather-bg" : isDark ? "bg-slate-950/95 md:rounded-[3rem]" : "bg-slate-950/95 md:rounded-[3rem]"
+        "fixed inset-0 z-50 w-full h-full flex items-center justify-center p-0",
+        isSyndicate ? "leather-bg" : isDark ? "bg-slate-950/95" : "bg-slate-950/95"
       )}>
         <div className={clsx(
-          "w-full h-full md:h-auto md:max-w-6xl overflow-hidden shadow-2xl flex flex-col",
-          isSyndicate ? "merrowed-border leather-bg border-syndicate-red" : isDark ? "bg-slate-900 md:rounded-[3rem] border border-slate-800" : "bg-slate-900 md:rounded-[3rem] border border-slate-800"
+          "w-full h-full overflow-hidden flex flex-col",
+          isSyndicate ? "merrowed-border leather-bg border-syndicate-red" : isDark ? "bg-slate-900" : "bg-slate-900"
         )}>
           {/* Header */}
           <div className={clsx(
@@ -382,7 +382,7 @@ export function StandaloneScorer() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto flex flex-col">
+          <div className="flex-1 overflow-hidden flex flex-col">
             {winner ? (
                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center animate-in fade-in zoom-in duration-500">
                   <Trophy className={clsx("w-32 h-32 mb-8", isSyndicate ? "text-bounty-gold animate-bounce" : "text-amber-400")} />
