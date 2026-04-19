@@ -30,6 +30,7 @@ import { PlayerView } from './components/PlayerView';
 import { StatsView } from './components/StatsView';
 import { ScorerView } from './components/ScorerView';
 import { StandaloneScorer } from './components/StandaloneScorer';
+import { SyndicateScorer } from './components/SyndicateScorer';
 import { EventDashboard } from './components/EventDashboard';
 import { ThemeProvider } from './lib/ThemeContext';
 import { 
@@ -58,13 +59,14 @@ function AppContent() {
   const [user, setUser] = useState<User | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'tournaments' | 'players' | 'stats' | 'admin' | 'dashboard' | 'scorer'>(() => {
+  const [activeTab, setActiveTab] = useState<'tournaments' | 'players' | 'stats' | 'admin' | 'dashboard' | 'scorer' | 'syndicate'>(() => {
     const path = window.location.pathname;
     if (path.startsWith('/venue')) return 'dashboard';
     if (path.startsWith('/players')) return 'players';
     if (path.startsWith('/stats')) return 'stats';
     if (path.startsWith('/admin')) return 'admin';
     if (path.startsWith('/scorer')) return 'scorer';
+    if (path.startsWith('/syndicate')) return 'syndicate';
     return 'tournaments';
   });
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -87,6 +89,7 @@ function AppContent() {
       stats: '/stats',
       admin: '/admin',
       scorer: '/scorer',
+      syndicate: '/syndicate',
       tournaments: '/'
     };
     const currentPath = window.location.pathname;
@@ -104,6 +107,7 @@ function AppContent() {
       else if (path.startsWith('/stats')) setActiveTab('stats');
       else if (path.startsWith('/admin')) setActiveTab('admin');
       else if (path.startsWith('/scorer')) setActiveTab('scorer');
+      else if (path.startsWith('/syndicate')) setActiveTab('syndicate');
       else setActiveTab('tournaments');
     };
 
@@ -463,6 +467,9 @@ function AppContent() {
               )}
               {activeTab === 'scorer' && (
                 <StandaloneScorer />
+              )}
+              {activeTab === 'syndicate' && (
+                <SyndicateScorer />
               )}
               {activeTab === 'admin' && (player?.role === 'admin' || player?.role === 'coordinator') && (
                 <AdminPanel currentUser={player} />
