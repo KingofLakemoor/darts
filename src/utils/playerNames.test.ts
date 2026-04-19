@@ -3,8 +3,9 @@ import { formatPlayerNames } from './playerNames';
 import { Player } from '../types';
 
 describe('formatPlayerNames', () => {
+  let uidCounter = 1;
   const mockPlayer = (overrides: Partial<Player>): Player => ({
-    uid: '1',
+    uid: String(uidCounter++),
     name: '',
     role: 'player',
     ...overrides,
