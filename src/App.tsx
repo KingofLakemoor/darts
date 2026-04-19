@@ -58,7 +58,15 @@ function AppContent() {
   const [user, setUser] = useState<User | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'tournaments' | 'players' | 'stats' | 'admin' | 'dashboard' | 'scorer'>('tournaments');
+  const [activeTab, setActiveTab] = useState<'tournaments' | 'players' | 'stats' | 'admin' | 'dashboard' | 'scorer'>(() => {
+    const path = window.location.pathname;
+    if (path.startsWith('/venue')) return 'dashboard';
+    if (path.startsWith('/players')) return 'players';
+    if (path.startsWith('/stats')) return 'stats';
+    if (path.startsWith('/admin')) return 'admin';
+    if (path.startsWith('/scorer')) return 'scorer';
+    return 'tournaments';
+  });
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [activeSeason, setActiveSeason] = useState<Season | null>(null);
@@ -71,6 +79,37 @@ function AppContent() {
     document.body.classList.remove('theme-syndicate', 'theme-dark', 'theme-light');
     document.body.classList.add(`theme-${theme}`);
   }, [theme]);
+
+  useEffect(() => {
+    const paths: Record<string, string> = {
+      dashboard: '/venue',
+      players: '/players',
+      stats: '/stats',
+      admin: '/admin',
+      scorer: '/scorer',
+      tournaments: '/'
+    };
+    const currentPath = window.location.pathname;
+    const targetPath = paths[activeTab];
+    if (currentPath !== targetPath && targetPath !== undefined) {
+      window.history.pushState(null, '', targetPath);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path.startsWith('/venue')) setActiveTab('dashboard');
+      else if (path.startsWith('/players')) setActiveTab('players');
+      else if (path.startsWith('/stats')) setActiveTab('stats');
+      else if (path.startsWith('/admin')) setActiveTab('admin');
+      else if (path.startsWith('/scorer')) setActiveTab('scorer');
+      else setActiveTab('tournaments');
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -134,7 +173,12 @@ function AppContent() {
         }
       } else {
         setPlayer(null);
-        setActiveTab('dashboard');
+        const path = window.location.pathname;
+        if (path.startsWith('/scorer')) {
+          setActiveTab('scorer');
+        } else {
+          setActiveTab('dashboard');
+        }
       }
       setLoading(false);
     });
