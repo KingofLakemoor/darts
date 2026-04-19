@@ -340,11 +340,19 @@ function LiveMatchCard({ match, players, isSyndicate }: { match: Match, players:
               <p className="text-xs font-bold opacity-40 uppercase tracking-widest">Player 1</p>
             </div>
           </div>
-          <div className={clsx(
-            "text-5xl font-black tabular-nums",
-            isSyndicate ? "text-syndicate-red" : isDark ? "text-indigo-400" : "text-indigo-600"
-          )}>
-            {match.score1}
+          <div className="flex flex-col items-end">
+            <div className={clsx(
+              "text-5xl font-black tabular-nums leading-none",
+              isSyndicate ? "text-syndicate-red" : isDark ? "text-indigo-400" : "text-indigo-600"
+            )}>
+              {match.score1}
+            </div>
+            <div className={clsx(
+              "text-xs font-bold uppercase tracking-widest opacity-60 mt-1",
+              isSyndicate ? "text-syndicate-red" : isDark ? "text-indigo-400" : "text-indigo-600"
+            )}>
+              Legs: {match.legs1 || 0}
+            </div>
           </div>
         </div>
 
@@ -375,11 +383,19 @@ function LiveMatchCard({ match, players, isSyndicate }: { match: Match, players:
               <p className="text-xs font-bold opacity-40 uppercase tracking-widest">Player 2</p>
             </div>
           </div>
-          <div className={clsx(
-            "text-5xl font-black tabular-nums",
-            isSyndicate ? "text-syndicate-red" : isDark ? "text-indigo-400" : "text-indigo-600"
-          )}>
-            {match.score2}
+          <div className="flex flex-col items-end">
+            <div className={clsx(
+              "text-5xl font-black tabular-nums leading-none",
+              isSyndicate ? "text-syndicate-red" : isDark ? "text-indigo-400" : "text-indigo-600"
+            )}>
+              {match.score2}
+            </div>
+            <div className={clsx(
+              "text-xs font-bold uppercase tracking-widest opacity-60 mt-1",
+              isSyndicate ? "text-syndicate-red" : isDark ? "text-indigo-400" : "text-indigo-600"
+            )}>
+              Legs: {match.legs2 || 0}
+            </div>
           </div>
         </div>
       </div>
