@@ -180,6 +180,8 @@ function AppContent() {
         const path = window.location.pathname;
         if (path.startsWith('/scorer')) {
           setActiveTab('scorer');
+        } else if (path.startsWith('/stats')) {
+          setActiveTab('stats');
         } else {
           setActiveTab('dashboard');
         }

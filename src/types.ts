@@ -80,6 +80,24 @@ export interface Venue {
   isSyndicatePartner?: boolean;
 }
 
+export interface MatchStats {
+  scoreTotal: number;
+  dartsTotal: number;
+  nineScoreTotal: number;
+  nineDartsTotal: number;
+  dblCheckout?: number;
+  dblCheckoutAttempts?: number;
+  sglCheckout?: number;
+  sglCheckoutAttempts?: number;
+  topLeg?: number;
+  topFinish?: number;
+  topScore?: number;
+  count180s?: number;
+  count170plus?: number;
+  count130plus?: number;
+  count90plus?: number;
+}
+
 export interface Match {
   id: string;
   tournamentId: string;
@@ -97,6 +115,8 @@ export interface Match {
   position: number;
   gameType: GameType;
   gameConfig: X01Config | CricketConfig;
+  player1Stats?: MatchStats;
+  player2Stats?: MatchStats;
 }
 
 export interface Season {
@@ -113,11 +133,16 @@ export interface X01HistoryState {
   currentDarts: number[];
   totalDarts1: number;
   totalDarts2: number;
+  legDarts1?: number;
+  legDarts2?: number;
   activePlayer: 1 | 2;
   sets1?: number;
   legs1?: number;
   legs2?: number;
   sets2?: number;
+  turnScore?: number;
+  stats1?: MatchStats;
+  stats2?: MatchStats;
 }
 
 export interface CricketHistoryState {

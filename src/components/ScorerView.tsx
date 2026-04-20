@@ -2,7 +2,7 @@ import { X01HistoryState, CricketHistoryState } from "../types";
 import React, { useState, useEffect } from 'react';
 import { doc, updateDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { Match, Player, X01Config, CricketConfig } from '../types';
+import { Match, Player, X01Config, CricketConfig, MatchStats } from '../types';
 import { X, Target, Trophy, ChevronRight, Minus, Plus, Delete, RotateCcw, Check, Zap, Shield, Skull, Crosshair } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTheme } from '../lib/ThemeContext';
@@ -39,6 +39,8 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
   const [modifier, setModifier] = useState<'single' | 'double' | 'triple'>('single');
   const [totalDarts1, setTotalDarts1] = useState(0);
   const [totalDarts2, setTotalDarts2] = useState(0);
+  const [legDarts1, setLegDarts1] = useState(0);
+  const [legDarts2, setLegDarts2] = useState(0);
 
   // Cricket State
   const cricketConfig = match.gameConfig as CricketConfig;
@@ -125,7 +127,9 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
         legs1,
         legs2,
         status: isFinal ? 'completed' : 'live',
-        winnerId
+        winnerId,
+        player1Stats: stats1,
+        player2Stats: stats2
       });
 
       if (isFinal && winnerId) {
@@ -165,26 +169,42 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
     }
   };
 
+  const [stats1, setStats1] = useState<MatchStats>(match.player1Stats || {
+    scoreTotal: 0, dartsTotal: 0, nineScoreTotal: 0, nineDartsTotal: 0,
+    dblCheckout: 0, dblCheckoutAttempts: 0, sglCheckout: 0, sglCheckoutAttempts: 0,
+    count180s: 0, count170plus: 0, count130plus: 0, count90plus: 0
+  });
+  const [stats2, setStats2] = useState<MatchStats>(match.player2Stats || {
+    scoreTotal: 0, dartsTotal: 0, nineScoreTotal: 0, nineDartsTotal: 0,
+    dblCheckout: 0, dblCheckoutAttempts: 0, sglCheckout: 0, sglCheckoutAttempts: 0,
+    count180s: 0, count170plus: 0, count130plus: 0, count90plus: 0
+  });
+
   const handleX01Dart = (value: number) => {
     let points = value;
     if (modifier === 'double') points *= 2;
     if (modifier === 'triple') points = value === 25 ? 50 : points * 3;
 
-    const stateSnapshot = {
+    const currentScore = activePlayer === 1 ? score1 : score2;
+
+    const stateSnapshot: X01HistoryState = {
       score1,
       score2,
       currentDarts: [...currentDarts],
       totalDarts1,
       totalDarts2,
+      legDarts1,
+      legDarts2,
       activePlayer,
       legs1,
       legs2,
       sets1,
-      sets2
+      sets2,
+      stats1: { ...stats1 },
+      stats2: { ...stats2 }
     };
     setX01History(prev => [...prev, stateSnapshot]);
 
-    const currentScore = activePlayer === 1 ? score1 : score2;
     const newScore = currentScore - points;
 
     // Syndicate effects
@@ -202,9 +222,48 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
     const doubleOut = x01Config.outRule === 'double';
     const canWin = !doubleOut || (modifier as string) === 'double' || (value === 25 && (modifier as string) === 'double');
     
+    let currentStats = activePlayer === 1 ? { ...stats1 } : { ...stats2 };
+
+    // Track checkout attempts
+    const isCheckoutAttempt = currentScore <= 170;
+    if (isCheckoutAttempt) {
+      if (x01Config.outRule === 'double') {
+        currentStats.dblCheckoutAttempts = (currentStats.dblCheckoutAttempts || 0) + 1;
+      } else {
+        currentStats.sglCheckoutAttempts = (currentStats.sglCheckoutAttempts || 0) + 1;
+      }
+    }
+
     if (newScore === 0 && canWin) {
       // Win!
+      if (x01Config.outRule === 'double') {
+        currentStats.dblCheckout = (currentStats.dblCheckout || 0) + 1;
+      } else {
+        currentStats.sglCheckout = (currentStats.sglCheckout || 0) + 1;
+      }
+
+      const turnPoints = newDarts.reduce((a, b) => a + b, 0);
+      currentStats.scoreTotal = (currentStats.scoreTotal || 0) + turnPoints;
+      currentStats.dartsTotal = (currentStats.dartsTotal || 0) + newDarts.length;
+
+      if (turnPoints === 180) currentStats.count180s = (currentStats.count180s || 0) + 1;
+      if (turnPoints >= 170 && turnPoints < 180) currentStats.count170plus = (currentStats.count170plus || 0) + 1;
+      if (turnPoints >= 130 && turnPoints < 170) currentStats.count130plus = (currentStats.count130plus || 0) + 1;
+      if (turnPoints >= 90 && turnPoints < 130) currentStats.count90plus = (currentStats.count90plus || 0) + 1;
+      if (!currentStats.topScore || turnPoints > currentStats.topScore) currentStats.topScore = turnPoints;
+
+      if ((activePlayer === 1 ? legDarts1 : legDarts2) + newDarts.length <= 9) {
+        currentStats.nineScoreTotal = (currentStats.nineScoreTotal || 0) + turnPoints;
+        currentStats.nineDartsTotal = (currentStats.nineDartsTotal || 0) + newDarts.length;
+      }
+
+      if (!currentStats.topFinish || currentScore > currentStats.topFinish) currentStats.topFinish = currentScore;
+      if (!currentStats.topLeg || ((activePlayer === 1 ? legDarts1 : legDarts2) + newDarts.length) < currentStats.topLeg) {
+        currentStats.topLeg = (activePlayer === 1 ? legDarts1 : legDarts2) + newDarts.length;
+      }
+
       if (activePlayer === 1) {
+        setStats1(currentStats);
         const newLegs = legs1 + 1;
         if (newLegs >= x01Config.legs) {
           setSets1(sets1 + 1);
@@ -214,6 +273,7 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
           setLegs1(newLegs);
         }
       } else {
+        setStats2(currentStats);
         const newLegs = legs2 + 1;
         if (newLegs >= x01Config.legs) {
           setSets2(sets2 + 1);
@@ -228,27 +288,76 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
       setCurrentDarts([]);
       setTotalDarts1(prev => activePlayer === 1 ? prev + newDarts.length : prev);
       setTotalDarts2(prev => activePlayer === 2 ? prev + newDarts.length : prev);
+      setLegDarts1(0);
+      setLegDarts2(0);
       setActivePlayer(activePlayer === 1 ? 2 : 1);
+
+      const matchRef = doc(db, 'matches', match.id);
+
+      const newSets1 = activePlayer === 1 && (legs1 + 1) >= x01Config.legs ? sets1 + 1 : sets1;
+      const newSets2 = activePlayer === 2 && (legs2 + 1) >= x01Config.legs ? sets2 + 1 : sets2;
+      const isMatchWin = newSets1 >= x01Config.sets || newSets2 >= x01Config.sets;
+
+      updateDoc(matchRef, {
+        score1: newSets1,
+        score2: newSets2,
+        legs1: activePlayer === 1 ? ((legs1 + 1) >= x01Config.legs ? 0 : legs1 + 1) : legs1,
+        legs2: activePlayer === 2 ? ((legs2 + 1) >= x01Config.legs ? 0 : legs2 + 1) : legs2,
+        currentScore1: x01Config.startScore,
+        currentScore2: x01Config.startScore,
+        player1Stats: activePlayer === 1 ? currentStats : stats1,
+        player2Stats: activePlayer === 2 ? currentStats : stats2,
+        ...(isMatchWin ? {} : { status: 'live' })
+      }).catch(err => console.error('Auto-save error:', err));
     } else if (newScore < 0 || (newScore === 1 && x01Config.outRule !== 'single') || (newScore === 0 && !canWin)) {
       // Bust
+      currentStats.dartsTotal = (currentStats.dartsTotal || 0) + 3;
+      if ((activePlayer === 1 ? legDarts1 : legDarts2) + 3 <= 9) {
+        currentStats.nineDartsTotal = (currentStats.nineDartsTotal || 0) + 3;
+      }
+
       const turnPoints = currentDarts.reduce((a, b) => a + b, 0);
       if (activePlayer === 1) {
+        setStats1(currentStats);
         setScore1(score1 + turnPoints);
       } else {
+        setStats2(currentStats);
         setScore2(score2 + turnPoints);
       }
       setCurrentDarts([]);
       setTotalDarts1(prev => activePlayer === 1 ? prev + 3 : prev);
       setTotalDarts2(prev => activePlayer === 2 ? prev + 3 : prev);
+      setLegDarts1(prev => activePlayer === 1 ? prev + 3 : prev);
+      setLegDarts2(prev => activePlayer === 2 ? prev + 3 : prev);
       setActivePlayer(activePlayer === 1 ? 2 : 1);
     } else {
       if (activePlayer === 1) setScore1(newScore);
       else setScore2(newScore);
 
       if (newDarts.length === 3) {
+        const turnPoints = newDarts.reduce((a, b) => a + b, 0);
+        currentStats.scoreTotal = (currentStats.scoreTotal || 0) + turnPoints;
+        currentStats.dartsTotal = (currentStats.dartsTotal || 0) + 3;
+
+        if ((activePlayer === 1 ? legDarts1 : legDarts2) + 3 <= 9) {
+          currentStats.nineScoreTotal = (currentStats.nineScoreTotal || 0) + turnPoints;
+          currentStats.nineDartsTotal = (currentStats.nineDartsTotal || 0) + 3;
+        }
+
+        if (turnPoints === 180) currentStats.count180s = (currentStats.count180s || 0) + 1;
+        if (turnPoints >= 170 && turnPoints < 180) currentStats.count170plus = (currentStats.count170plus || 0) + 1;
+        if (turnPoints >= 130 && turnPoints < 170) currentStats.count130plus = (currentStats.count130plus || 0) + 1;
+        if (turnPoints >= 90 && turnPoints < 130) currentStats.count90plus = (currentStats.count90plus || 0) + 1;
+        if (!currentStats.topScore || turnPoints > currentStats.topScore) currentStats.topScore = turnPoints;
+
+        if (activePlayer === 1) setStats1(currentStats);
+        else setStats2(currentStats);
+
         setCurrentDarts([]);
         setTotalDarts1(prev => activePlayer === 1 ? prev + 3 : prev);
         setTotalDarts2(prev => activePlayer === 2 ? prev + 3 : prev);
+        setLegDarts1(prev => activePlayer === 1 ? prev + 3 : prev);
+        setLegDarts2(prev => activePlayer === 2 ? prev + 3 : prev);
         setActivePlayer(activePlayer === 1 ? 2 : 1);
         
         // Auto-save progress after each round for real-time updates
@@ -260,9 +369,13 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
           legs2,
           currentScore1: activePlayer === 1 ? newScore : score1,
           currentScore2: activePlayer === 2 ? newScore : score2,
+          player1Stats: activePlayer === 1 ? currentStats : stats1,
+          player2Stats: activePlayer === 2 ? currentStats : stats2,
           status: 'live'
         }).catch(err => console.error('Auto-save error:', err));
       } else {
+        if (activePlayer === 1) setStats1(currentStats);
+        else setStats2(currentStats);
         setCurrentDarts(newDarts);
       }
     }
@@ -278,11 +391,15 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
     setCurrentDarts(lastState.currentDarts);
     setTotalDarts1(lastState.totalDarts1);
     setTotalDarts2(lastState.totalDarts2);
+    setLegDarts1(lastState.legDarts1 || 0);
+    setLegDarts2(lastState.legDarts2 || 0);
     setActivePlayer(lastState.activePlayer);
     setLegs1(lastState.legs1 || 0);
     setLegs2(lastState.legs2 || 0);
     setSets1(lastState.sets1 || 0);
     setSets2(lastState.sets2 || 0);
+    if (lastState.stats1) setStats1(lastState.stats1);
+    if (lastState.stats2) setStats2(lastState.stats2);
     setX01History(prev => prev.slice(0, -1));
   };
 
