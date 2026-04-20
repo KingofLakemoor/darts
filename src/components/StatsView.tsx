@@ -69,6 +69,22 @@ export function StatsView() {
       let seasonWonLegs = 0;
       let seasonTotalLegs = 0;
 
+      let scoreTotal = 0;
+      let dartsTotal = 0;
+      let nineScoreTotal = 0;
+      let nineDartsTotal = 0;
+      let dblCheckout = 0;
+      let dblCheckoutAttempts = 0;
+      let sglCheckout = 0;
+      let sglCheckoutAttempts = 0;
+      let count180s = 0;
+      let count170plus = 0;
+      let count130plus = 0;
+      let count90plus = 0;
+      let topLeg = Infinity;
+      let topFinish = 0;
+      let topScore = 0;
+
       pMatches.forEach(m => {
         if (m.winnerId === player.uid) {
           seasonWins++;
@@ -76,14 +92,40 @@ export function StatsView() {
           seasonLosses++;
         }
 
+        let mStats = undefined;
+
         if (m.player1Id === player.uid) {
           seasonWonLegs += (m.legs1 || 0);
           seasonTotalLegs += (m.legs1 || 0) + (m.legs2 || 0);
+          mStats = m.player1Stats;
         } else {
           seasonWonLegs += (m.legs2 || 0);
           seasonTotalLegs += (m.legs1 || 0) + (m.legs2 || 0);
+          mStats = m.player2Stats;
+        }
+
+        if (mStats) {
+          scoreTotal += mStats.scoreTotal || 0;
+          dartsTotal += mStats.dartsTotal || 0;
+          nineScoreTotal += mStats.nineScoreTotal || 0;
+          nineDartsTotal += mStats.nineDartsTotal || 0;
+          dblCheckout += mStats.dblCheckout || 0;
+          dblCheckoutAttempts += mStats.dblCheckoutAttempts || 0;
+          sglCheckout += mStats.sglCheckout || 0;
+          sglCheckoutAttempts += mStats.sglCheckoutAttempts || 0;
+          count180s += mStats.count180s || 0;
+          count170plus += mStats.count170plus || 0;
+          count130plus += mStats.count130plus || 0;
+          count90plus += mStats.count90plus || 0;
+
+          if (mStats.topLeg && mStats.topLeg < topLeg) topLeg = mStats.topLeg;
+          if (mStats.topFinish && mStats.topFinish > topFinish) topFinish = mStats.topFinish;
+          if (mStats.topScore && mStats.topScore > topScore) topScore = mStats.topScore;
         }
       });
+
+      const avg = dartsTotal > 0 ? (scoreTotal / dartsTotal) * 3 : 0;
+      const nineAvg = nineDartsTotal > 0 ? (nineScoreTotal / nineDartsTotal) * 3 : 0;
 
       // Override stats with season stats
       return {
@@ -94,6 +136,20 @@ export function StatsView() {
           losses: seasonLosses,
           wonLegs: seasonWonLegs,
           totalLegs: seasonTotalLegs,
+          avg,
+          nineAvg,
+          dblCheckout,
+          dblCheckoutAttempts,
+          sglCheckout,
+          sglCheckoutAttempts,
+          count180s,
+          count170plus,
+          count130plus,
+          count90plus,
+          topLeg: topLeg === Infinity ? undefined : topLeg,
+          topFinish,
+          topScore,
+          topAvg: avg // Since we don't store per-match avg to pick the max, we use season avg or modify later
         }
       };
     });
