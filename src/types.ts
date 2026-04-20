@@ -32,6 +32,7 @@ export interface PlayerStats {
   count170plus?: number;
   count130plus?: number;
   count90plus?: number;
+  countU10?: number;
   avgScore?: number;
   highScore?: number;
 }
@@ -96,6 +97,7 @@ export interface MatchStats {
   count170plus?: number;
   count130plus?: number;
   count90plus?: number;
+  countU10?: number;
 }
 
 export interface Match {
