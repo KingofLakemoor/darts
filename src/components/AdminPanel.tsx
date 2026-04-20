@@ -211,7 +211,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
       name: displayName,
       role: 'player',
       isPlaceholder: true,
-      stats: { wins: 0, losses: 0, avgScore: 0 }
+      stats: { wins: 0, losses: 0, cricketWins: 0, cricketLosses: 0, avgScore: 0 }
     });
     
     setNewPlayer({ firstName: '', lastName: '', email: '' });

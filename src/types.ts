@@ -15,6 +15,8 @@ export interface Player {
 export interface PlayerStats {
   wins?: number;
   losses?: number;
+  cricketWins?: number;
+  cricketLosses?: number;
   wonLegs?: number;
   totalLegs?: number;
   avg?: number;
