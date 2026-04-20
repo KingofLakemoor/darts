@@ -66,6 +66,8 @@ export function StatsView() {
 
       let seasonWins = 0;
       let seasonLosses = 0;
+      let seasonCricketWins = 0;
+      let seasonCricketLosses = 0;
       let seasonWonLegs = 0;
       let seasonTotalLegs = 0;
 
@@ -87,6 +89,15 @@ export function StatsView() {
       let topScore = 0;
 
       pMatches.forEach(m => {
+        if (m.gameType === 'Cricket') {
+          if (m.winnerId === player.uid) {
+            seasonCricketWins++;
+          } else if (m.winnerId) {
+            seasonCricketLosses++;
+          }
+          return; // Skip detailed stats for Cricket
+        }
+
         if (m.winnerId === player.uid) {
           seasonWins++;
         } else if (m.winnerId) {
@@ -136,6 +147,8 @@ export function StatsView() {
           ...player.stats,
           wins: seasonWins,
           losses: seasonLosses,
+          cricketWins: seasonCricketWins,
+          cricketLosses: seasonCricketLosses,
           wonLegs: seasonWonLegs,
           totalLegs: seasonTotalLegs,
           avg,
@@ -244,6 +257,8 @@ export function StatsView() {
                 )}>Player</th>
                 <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-400")}>M. Won</th>
                 <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-400")}>M. Lost</th>
+                <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-400")}>C. Won</th>
+                <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-400")}>C. Lost</th>
                 <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-400")}>Won Legs %</th>
                 <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-400")}>Avg</th>
                 <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-400")}>9-Avg</th>
@@ -296,6 +311,12 @@ export function StatsView() {
                     </td>
                     <td className="p-6 text-center">
                       <span className={clsx("text-sm font-black", isSyndicate ? "text-syndicate-red" : isDark ? "text-red-400" : "text-red-600")}>{stats?.losses || 0}</span>
+                    </td>
+                    <td className="p-6 text-center">
+                      <span className={clsx("text-sm font-black", isSyndicate ? "text-nasty-cream" : isDark ? "text-emerald-400" : "text-emerald-600")}>{stats?.cricketWins || 0}</span>
+                    </td>
+                    <td className="p-6 text-center">
+                      <span className={clsx("text-sm font-black", isSyndicate ? "text-syndicate-red" : isDark ? "text-red-400" : "text-red-600")}>{stats?.cricketLosses || 0}</span>
                     </td>
                     <td className="p-6 text-center">
                       <span className={clsx("text-sm font-black", isSyndicate ? "text-nasty-cream" : isDark ? "text-slate-50" : "text-slate-900")}>{wonLegsPerc}%</span>

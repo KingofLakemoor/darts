@@ -169,7 +169,7 @@ function AppContent() {
               email: firebaseUser.email || '',
               photoURL: firebaseUser.photoURL || '',
               role: 'player',
-              stats: { wins: 0, losses: 0, avgScore: 0, highScore: 0 }
+              stats: { wins: 0, losses: 0, cricketWins: 0, cricketLosses: 0, avgScore: 0, highScore: 0 }
             };
             await setDoc(doc(db, 'players', firebaseUser.uid), newPlayer);
             setPlayer(newPlayer);
