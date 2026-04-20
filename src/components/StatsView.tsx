@@ -81,6 +81,7 @@ export function StatsView() {
       let count170plus = 0;
       let count130plus = 0;
       let count90plus = 0;
+      let countU10 = 0;
       let topLeg = Infinity;
       let topFinish = 0;
       let topScore = 0;
@@ -117,6 +118,7 @@ export function StatsView() {
           count170plus += mStats.count170plus || 0;
           count130plus += mStats.count130plus || 0;
           count90plus += mStats.count90plus || 0;
+          countU10 += mStats.countU10 || 0;
 
           if (mStats.topLeg && mStats.topLeg < topLeg) topLeg = mStats.topLeg;
           if (mStats.topFinish && mStats.topFinish > topFinish) topFinish = mStats.topFinish;
@@ -146,6 +148,7 @@ export function StatsView() {
           count170plus,
           count130plus,
           count90plus,
+          countU10,
           topLeg: topLeg === Infinity ? undefined : topLeg,
           topFinish,
           topScore,
@@ -254,6 +257,7 @@ export function StatsView() {
                 <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-400")}>170+</th>
                 <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-400")}>130+</th>
                 <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-400")}>90+</th>
+                <th className={clsx("p-6 font-black text-[10px] uppercase tracking-widest text-center", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-400")}>U10</th>
               </tr>
             </thead>
             <tbody className={clsx(
@@ -331,6 +335,7 @@ export function StatsView() {
                     <td className={clsx("p-6 text-center text-sm font-bold", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-600")}>{stats?.count170plus || 0}</td>
                     <td className={clsx("p-6 text-center text-sm font-bold", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-600")}>{stats?.count130plus || 0}</td>
                     <td className={clsx("p-6 text-center text-sm font-bold", isSyndicate ? "text-steel-gray" : isDark ? "text-slate-400" : "text-slate-600")}>{stats?.count90plus || 0}</td>
+                    <td className={clsx("p-6 text-center text-sm font-bold", isSyndicate ? "text-syndicate-red" : isDark ? "text-red-400" : "text-red-600")}>{stats?.countU10 || 0}</td>
                   </tr>
                 );
               })}

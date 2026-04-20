@@ -350,6 +350,11 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
         if (turnPoints >= 90 && turnPoints < 130) currentStats.count90plus = (currentStats.count90plus || 0) + 1;
         if (!currentStats.topScore || turnPoints > currentStats.topScore) currentStats.topScore = turnPoints;
 
+        const startOfTurnScore = newScore + turnPoints;
+        if (startOfTurnScore > 10 && turnPoints < 10) {
+          currentStats.countU10 = (currentStats.countU10 || 0) + 1;
+        }
+
         if (activePlayer === 1) setStats1(currentStats);
         else setStats2(currentStats);
 
