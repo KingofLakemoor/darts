@@ -229,9 +229,13 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
     setEditingPlayer(null);
   };
 
-  const deletePlayer = async (uid: string) => {
-    if (confirm('Are you sure you want to delete this player?')) {
-      await deleteDoc(doc(db, 'players', uid));
+  const deletePlayer = async (uid: string, name: string) => {
+    if (confirm(`Are you sure you want to delete ${name}?`)) {
+      try {
+        await deleteDoc(doc(db, 'players', uid));
+      } catch (error) {
+        console.error("Failed to delete player:", error);
+      }
     }
   };
 
@@ -1288,7 +1292,7 @@ export function AdminPanel({ currentUser }: { currentUser: Player | null }) {
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => deletePlayer(p.uid)}
+                            onClick={() => deletePlayer(p.uid, p.name)}
                             className="p-1 text-slate-400 hover:text-red-500 transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
