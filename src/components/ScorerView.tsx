@@ -8,6 +8,12 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useTheme } from '../lib/ThemeContext';
 import { clsx } from 'clsx';
 
+// Array literals outside components prevent unnecessary re-allocations on each render.
+const X01_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+const CRICKET_NUMBERS = [20, 19, 18, 17, 16, 15, 25];
+const DART_INDICES = [0, 1, 2];
+const MARK_INDICES = [1, 2, 3];
+
 interface Props {
   match: Match;
   tournamentId: string;
@@ -611,7 +617,7 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
             {match.gameType === 'X01' ? (
               <div className="grid grid-cols-5 gap-1">
                 <div className="col-span-4 grid grid-cols-4 gap-1">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map(n => (
+                  {X01_NUMBERS.map(n => (
                     <KeyButton 
                       key={n} 
                       onClick={() => handleX01Dart(n)}
@@ -651,7 +657,7 @@ export function ScorerView({ match, tournamentId, player1, player2, onClose, isS
               </div>
             ) : (
               <div className="grid grid-cols-4 md:grid-cols-7 gap-3">
-                {[20, 19, 18, 17, 16, 15, 25].map(num => (
+                {CRICKET_NUMBERS.map(num => (
                   <div key={num} className="space-y-2">
                     <button
                       onClick={() => handleCricketMark(num, 1)}
@@ -836,7 +842,7 @@ function PlayerScore({ player, score, legs, sets, isActive, marks, isShaking, da
 
       <div className="flex items-center justify-between gap-2">
         <div className="flex gap-1 flex-1">
-          {[0, 1, 2].map(i => {
+          {DART_INDICES.map(i => {
             const hasDart = darts?.[i] !== undefined;
             const suggestionIndex = i - (darts?.length || 0);
             const suggestionText = !hasDart && isActive && suggestionParts && suggestionIndex >= 0 && suggestionIndex < suggestionParts.length
@@ -883,7 +889,7 @@ function PlayerScore({ player, score, legs, sets, isActive, marks, isShaking, da
 
       {marks && (
         <div className="mt-8 grid grid-cols-7 gap-2">
-          {[20, 19, 18, 17, 16, 15, 25].map(num => (
+          {CRICKET_NUMBERS.map(num => (
             <div key={num} className="flex flex-col items-center gap-1">
               <span className={clsx(
                 "text-[10px] font-bold",
@@ -898,7 +904,7 @@ function PlayerScore({ player, score, legs, sets, isActive, marks, isShaking, da
                     <Check className="w-3 h-3 text-slate-900" strokeWidth={4} />
                   </div>
                 ) : (
-                  [1, 2, 3].map(i => (
+                  MARK_INDICES.map(i => (
                     <div
                       key={i}
                       className={clsx(
