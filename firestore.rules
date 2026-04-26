@@ -28,7 +28,9 @@ service cloud.firestore {
     }
 
     function isValidPlayer(data) {
-      return data.uid is string && data.name is string && data.name.size() > 0 && data.name.size() < 100;
+      return data.uid is string &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.role in ['admin', 'coordinator', 'player'];
     }
 
     function isValidTournament(data) {
@@ -42,8 +44,18 @@ service cloud.firestore {
 
     match /players/{uid} {
       allow read: if true;
-      allow create: if isAuthenticated() && (isOwner(uid) || hasAdminPrivileges()) && isValidPlayer(request.resource.data);
-      allow update: if isAuthenticated() && (isOwner(uid) || hasAdminPrivileges()) && isValidPlayer(request.resource.data);
+      allow create: if isValidPlayer(request.resource.data) && (
+        (isOwner(uid) &&
+         request.resource.data.role == 'player' &&
+         request.resource.data.get('isVested', false) == false &&
+         request.resource.data.get('hasBounty', false) == false) ||
+        hasAdminPrivileges()
+      );
+      allow update: if isValidPlayer(request.resource.data) && (
+        (isOwner(uid) &&
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'isVested', 'hasBounty'])) ||
+        hasAdminPrivileges()
+      );
       allow delete: if isAdmin();
     }
 
