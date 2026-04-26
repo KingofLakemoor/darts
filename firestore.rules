@@ -93,7 +93,12 @@ service cloud.firestore {
                          (resource.data.player1Id == "" || resource.data.player2Id == "") &&
                          request.auth.uid in get(/databases/$(database)/documents/tournaments/$(resource.data.tournamentId)).data.participants
                        )
-                     ));
+                     ) &&
+                     request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                       'score1', 'score2', 'legs1', 'legs2',
+                       'currentScore1', 'currentScore2',
+                       'winnerId', 'status', 'player1Stats', 'player2Stats'
+                     ]));
     }
 
     match /venues/{venueId} {
